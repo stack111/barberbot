@@ -14,25 +14,25 @@ namespace BarberBot.Controllers
     [BotAuthentication]
     public class MessagesController : ApiController
     {
-        internal static IDialog<SandwichOrder> MakeRootDialog()
+        private readonly Shop shop;
+        public MessagesController(Shop shop)
         {
-            return Chain.From(() => FormDialog.FromForm(SandwichOrder.BuildForm));
+            this.shop = shop;
         }
-
         /// <summary>
         /// POST: api/Messages
         /// receive a message from a user and send replies
         /// </summary>
         /// <param name="activity"></param>
         [ResponseType(typeof(void))]
-        public virtual async Task<HttpResponseMessage> Post([FromBody] Activity activity)
+        public virtual async Task<HttpResponseMessage> Post([FromBody] Microsoft.Bot.Connector.Activity activity)
         {
             if (activity != null)
             {
                 // Check if activity is of type message
-                if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
+                if (activity.GetActivityType() == ActivityTypes.Message)
                 {
-                    await Conversation.SendAsync(activity, () => new ConversationDialog());
+                    await Conversation.SendAsync(activity, () => new RootDialog(shop));
                 }
                 else
                 {

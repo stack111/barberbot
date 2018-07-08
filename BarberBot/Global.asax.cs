@@ -6,6 +6,7 @@ using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Connector;
+using Autofac.Integration.WebApi;
 
 namespace BarberBot
 {
@@ -16,6 +17,14 @@ namespace BarberBot
             // Bot Storage: This is a great spot to register the private state storage for your bot. 
             // We provide adapters for Azure Table, CosmosDb, SQL Azure, or you can implement your own!
             // For samples and documentation, see: https://github.com/Microsoft/BotBuilder-Azure
+            var containerBuilder = new ContainerBuilder();
+            var config = GlobalConfiguration.Configuration;
+            containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            containerBuilder.RegisterType<Shop>();
+
+            var container = containerBuilder.Build();
+            config.DependencyResolver = new AutofacWebApiDependencyResolver(container);
+
 
             Conversation.UpdateContainer(
                 builder =>
