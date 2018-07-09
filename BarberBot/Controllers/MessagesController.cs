@@ -14,9 +14,11 @@ namespace BarberBot.Controllers
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+        private readonly Appointment appointment;
         private readonly Shop shop;
-        public MessagesController(Shop shop)
+        public MessagesController(Appointment appointment, Shop shop)
         {
+            this.appointment = appointment;
             this.shop = shop;
         }
         /// <summary>
@@ -32,7 +34,7 @@ namespace BarberBot.Controllers
                 // Check if activity is of type message
                 if (activity.GetActivityType() == ActivityTypes.Message)
                 {
-                    await Conversation.SendAsync(activity, () => new RootDialog(shop));
+                    await Conversation.SendAsync(activity, () => new RootDialog(appointment, shop));
                 }
                 else
                 {

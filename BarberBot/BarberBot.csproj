@@ -135,22 +135,25 @@
       <HintPath>packages\Microsoft.IdentityModel.Tokens.5.2.1\lib\net451\Microsoft.IdentityModel.Tokens.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Definitions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.1.0.3\lib\net462\Microsoft.Recognizers.Definitions.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.1.0.8.2\lib\net462\Microsoft.Recognizers.Definitions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Text, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.1.0.3\lib\net462\Microsoft.Recognizers.Text.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Recognizers.Text.Choice, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Recognizers.Text.Choice.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.Choice.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Text.DateTime, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.DateTime.1.0.3\lib\net462\Microsoft.Recognizers.Text.DateTime.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.DateTime.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.DateTime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Text.Number, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.Number.1.0.3\lib\net462\Microsoft.Recognizers.Text.Number.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.Number.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.Number.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Text.NumberWithUnit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.NumberWithUnit.1.0.3\lib\net462\Microsoft.Recognizers.Text.NumberWithUnit.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.NumberWithUnit.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.NumberWithUnit.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Recognizers.Text.Sequence, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>packages\Microsoft.Recognizers.Text.Sequence.1.0.3\lib\net462\Microsoft.Recognizers.Text.Sequence.dll</HintPath>
+      <HintPath>packages\Microsoft.Recognizers.Text.Sequence.1.0.8.2\lib\net462\Microsoft.Recognizers.Text.Sequence.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Rest.ClientRuntime.2.3.10\lib\net452\Microsoft.Rest.ClientRuntime.dll</HintPath>
@@ -383,14 +386,18 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AppointmentValidationResponse.cs" />
+    <Compile Include="Appointment.cs" />
+    <Compile Include="AppointmentRequest.cs" />
+    <Compile Include="AppointmentAvailabilityResponse.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Barber.cs" />
+    <Compile Include="BarberAvailabilityResponse.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\BarberDialog.cs" />
-    <Compile Include="Models\PromptAppointmentDateTime.cs" />
+    <Compile Include="Models\AppointmentRequestDialog.cs" />
+    <Compile Include="Models\PromptAppointmentRequestDateTime.cs" />
     <Compile Include="Models\RootDialog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shop.cs" />
@@ -398,7 +405,9 @@
     <Compile Include="ValidationResult.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="packages.config" />
+    <Content Include="packages.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

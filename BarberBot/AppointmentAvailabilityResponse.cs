@@ -6,21 +6,29 @@ using System.Web;
 
 namespace BarberBot
 {
-    public class AppointmentValidationResponse
+    public class AppointmentAvailabilityResponse
     {
-        public AppointmentValidationResponse()
+        public AppointmentAvailabilityResponse()
         {
             ValidationResults = new List<ValidationResult>();
         }
-        public bool IsValid { get; set; }
+
+        public bool IsAvailable { get; set; }
+        public bool RoundedRequestedTime { get; set; }
+        public AppointmentRequest SuggestedRequest { get; set; }
+
         public List<ValidationResult> ValidationResults { get; set; }
 
         public string FormattedErrorMessage()
         {
-            StringBuilder builder = new StringBuilder("Sorry, ");
+            StringBuilder builder = new StringBuilder("Sorry! ");
             foreach (var msg in ValidationResults)
             {
                 builder.Append(msg.Message);
+            }
+            if(SuggestedRequest != null)
+            {
+                builder.AppendLine($"However we suggest you to consider: {SuggestedRequest.ToSuggestionString()}");
             }
             return builder.ToString();
         }

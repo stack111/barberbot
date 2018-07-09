@@ -21,6 +21,8 @@ namespace BarberBot
             var config = GlobalConfiguration.Configuration;
             containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
             containerBuilder.RegisterType<Shop>();
+            containerBuilder.RegisterType<Appointment>();
+            
 
             var container = containerBuilder.Build();
             config.DependencyResolver = new AutofacWebApiDependencyResolver(container);

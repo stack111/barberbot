@@ -9,9 +9,11 @@ namespace BarberBot.Models
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        private readonly Appointment appointment;
         private readonly Shop shop;
-        public RootDialog(Shop shop)
+        public RootDialog(Appointment appointment, Shop shop)
         {
+            this.appointment = appointment;
             this.shop = shop;
         }
 
@@ -51,7 +53,7 @@ namespace BarberBot.Models
                 switch (selection)
                 {
                     case requestAppointmentConst:
-                        context.Call(new BarberDialog(shop), AfterApointmentRequestAsync);
+                        context.Call(new AppointmentRequestDialog(appointment, new AppointmentRequest(shop)), AfterApointmentRequestAsync);
                         
                         break;
                     case cancelAppointmentConst:
