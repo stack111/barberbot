@@ -98,22 +98,22 @@ namespace BarberBot
             roundedRequestedDateTime = true;
             if (requestedTime.Minute > 0 && requestedTime.Minute <= 15)
             {
-                newProposedTime.AddMinutes(-1 * minute);
+                newProposedTime = newProposedTime.AddMinutes(-1 * minute);
             }
             else if (requestedTime.Minute > 15 && requestedTime.Minute <= 29)
             {
                 var roundMark = 30 - minute;
-                newProposedTime.AddMinutes(roundMark);
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
             }
             else if (requestedTime.Minute >= 31 && requestedTime.Minute <= 45)
             {
                 var roundMark = minute - 30;
-                newProposedTime.AddMinutes(-1 * roundMark);
+                newProposedTime = newProposedTime.AddMinutes(-1 * roundMark);
             }
             else if (requestedTime.Minute > 45 && requestedTime.Minute <= 59)
             {
                 var roundMark = 60 - minute;
-                newProposedTime.AddMinutes(roundMark);
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
             }
             else
             {

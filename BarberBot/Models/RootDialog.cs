@@ -74,11 +74,11 @@ namespace BarberBot.Models
 
             if (!success)
             {
-                await context.PostAsync("We couldn't reserve that appointment, but you can try again.");
+                await context.PostAsync("We didn't reserve that appointment, but you can try again.");
             }
             else
             {
-                await context.PostAsync("Thanks for the appointment, we look forward to seeing you soon.");
+                await context.PostAsync("Thanks!");
             }
 
             await this.StartAsync(context);

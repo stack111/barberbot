@@ -41,11 +41,11 @@ namespace BarberBot
             // check holidays
 
             // is it in the past?
-            if (dateTimeToCheck < storeHours.ClosingDateTime(nowDateTime))
+            if (dateTimeToCheck < nowDateTime)
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = "Appointments can't be scheduled outside of store hours. "
+                    Message = "Appointments can't be scheduled before right now. "
                 });
                 return response;
             }
@@ -82,7 +82,7 @@ namespace BarberBot
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = $"The appointment needs to be at least 1 hour before closing, hours are: {FormattedDayHours(appointmentRequest.RequestedDateTime)}. "
+                    Message = $"The appointment needs to be at least 1 hour before closing. Hours are {FormattedDayHours(appointmentRequest.RequestedDateTime)}. "
                 });
             }
             return response;

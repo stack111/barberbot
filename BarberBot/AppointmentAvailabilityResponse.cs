@@ -28,7 +28,7 @@ namespace BarberBot
             }
             if(SuggestedRequest != null)
             {
-                builder.AppendLine($"However we suggest you to consider: {SuggestedRequest.ToSuggestionString()}");
+                builder.AppendLine($"Instead would you like to reserve {SuggestedRequest.ToSuggestionString()}?");
             }
             return builder.ToString();
         }

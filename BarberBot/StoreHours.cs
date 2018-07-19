@@ -96,7 +96,7 @@ namespace BarberBot
             {
                 DateTime opening = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, OpeningHour, 0, 0);
                 DateTime closing = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, ClosingHour, 0, 0);
-                return $"{dateTime.ToString("ddd")}: {String.Format("{0:t}", opening)} - {String.Format("{0:t}", closing)}";
+                return $"{dateTime.ToString("ddd")} {String.Format("{0:t}", opening)} - {String.Format("{0:t}", closing)}";
             }
             else
             {

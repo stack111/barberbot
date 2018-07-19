@@ -41,7 +41,7 @@ namespace BarberBot.Models
                 var barber = await result;
 
                 if (barber != null)
-                {
+                { 
                     // retrieve barber schedule and the next available window and barbers in that window
                     // suggest a good window of time and day.
                     // todo make this a real suggestion based on calendar.
@@ -72,7 +72,11 @@ namespace BarberBot.Models
 
                 if (appointmentRequest.RequestedDateTime != DateTime.MinValue)
                 {
-                    context.Done(true);
+                    var promptTodayConfirmation = new PromptDialog.PromptConfirm(
+                               $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} at {string.Format("{0:m} {0:t}", appointmentRequest.RequestedDateTime)}?",
+                               "Sorry I didn't understand you. Can you choose an option below?",
+                               2);
+                    context.Call(promptTodayConfirmation, this.AfterAppointmentConfirmation);
                 }
                 else
                 {
@@ -81,6 +85,21 @@ namespace BarberBot.Models
             }
             catch (TooManyAttemptsException)
             {
+                context.Done(false);
+            }
+        }
+
+        private async Task AfterAppointmentConfirmation(IDialogContext context, IAwaitable<bool> result)
+        {
+            bool confirmed = await result;
+            if (confirmed)
+            {
+                await context.PostAsync("Ok great, see you then! As a friendly reminder we have a 15 minute late cancellation for no-shows.", context.Activity.AsMessageActivity().Locale);
+                context.Done(true);
+            }
+            else
+            {
+                await context.PostAsync("Ok, you can try again if you like.", context.Activity.AsMessageActivity().Locale);
                 context.Done(false);
             }
         }
