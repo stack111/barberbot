@@ -19,7 +19,7 @@ namespace BarberBot
 
         public List<ValidationResult> ValidationResults { get; set; }
 
-        public string FormattedErrorMessage()
+        public string FormattedValidationMessage()
         {
             StringBuilder builder = new StringBuilder("Sorry! ");
             foreach (var msg in ValidationResults)

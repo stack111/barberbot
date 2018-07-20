@@ -73,7 +73,7 @@ namespace BarberBot.Models
                 if (appointmentRequest.RequestedDateTime != DateTime.MinValue)
                 {
                     var promptTodayConfirmation = new PromptDialog.PromptConfirm(
-                               $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} at {string.Format("{0:m} {0:t}", appointmentRequest.RequestedDateTime)}?",
+                               $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} on {string.Format("{0} {1:m} at {1:t}", appointmentRequest.RequestedDateTime.ToString("ddd"), appointmentRequest.RequestedDateTime)}?",
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                     context.Call(promptTodayConfirmation, this.AfterAppointmentConfirmation);
@@ -99,7 +99,7 @@ namespace BarberBot.Models
             }
             else
             {
-                await context.PostAsync("Ok, you can try again if you like.", context.Activity.AsMessageActivity().Locale);
+                await context.PostAsync("Ok.", context.Activity.AsMessageActivity().Locale);
                 context.Done(false);
             }
         }

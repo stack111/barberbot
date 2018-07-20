@@ -86,7 +86,7 @@ namespace BarberBot
         public string ToSuggestionString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendFormat("{0:m} {0:t} with {1}", RequestedDateTime, RequestedBarber.DisplayName);
+            builder.AppendFormat("{2} {0:m} at {0:t} with {1}", RequestedDateTime, RequestedBarber.DisplayName, RequestedDateTime.ToString("ddd"));
             return builder.ToString();
         }
 

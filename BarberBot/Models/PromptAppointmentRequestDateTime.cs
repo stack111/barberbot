@@ -99,7 +99,7 @@
                             // we will send the suggestion so if the user confirms we can use it.
                             suggestedAppointmentRequest = response.SuggestedRequest;
                             var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
-                               response.FormattedErrorMessage(),
+                               response.FormattedValidationMessage(),
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                             context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
@@ -108,6 +108,21 @@
                     else if (modelResult["type"] == "datetime")
                     {
                         var parsedTime = DateTime.Parse(modelResult["value"]);
+                        parsedTime = DateTime.SpecifyKind(parsedTime, DateTimeKind.Local);
+                        if(parsedTime.Date < PSTDate)
+                        {
+                            // fix bias for past days of the week
+                            var fix = parsedTime.Next(parsedTime.DayOfWeek);
+                            parsedTime = new DateTime(fix.Year, fix.Month, fix.Day, parsedTime.Hour, parsedTime.Minute, 0);
+                        }
+
+                        if (parsedTime.Date == PSTDate && parsedTime.Hour < PSTDateTime.Hour && 
+                            (parsedTime.Hour >= 1 || parsedTime.Hour <= 9))
+                        {
+                            // fix bias for time of the day
+                            parsedTime = parsedTime.AddHours(12);
+                        }
+
                         timeValue = parsedTime.ToShortTimeString();
                         request.RequestedDateTime = parsedTime;
                         var response = await request.IsAvailableAsync();
@@ -121,7 +136,7 @@
                         {
                             suggestedAppointmentRequest = response.SuggestedRequest;
                             var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
-                               response.FormattedErrorMessage(),
+                               response.FormattedValidationMessage(),
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                             context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
@@ -130,22 +145,30 @@
                     else if (modelResult["type"] == "date")
                     {
                         var parsedDate = DateTime.Parse(modelResult["value"]);
+
+                        if (parsedDate < PSTDate)
+                        {
+                            // fix bias for past Saturday/Sunday
+                            var fix = parsedDate.Next(parsedDate.DayOfWeek);
+                            parsedDate = new DateTime(fix.Year, fix.Month, fix.Day);
+                        }
+
                         request.RequestedDateTime = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, PSTDateTime.Hour, PSTDateTime.Minute, 0, DateTimeKind.Local);
                         var response = await request.IsAvailableAsync();
                         if (response.IsAvailable)
                         {
                             var promptTodayConfirmation = new PromptDialog.PromptConfirm(
-                               $"I found around {request.RequestedDateTime.ToShortTimeString()}, everything looks available at the moment but can you confirm that's what you meant?",
+                               $"I found {request.ToSuggestionString()}, everything looks available at the moment but can you confirm that's what you meant?",
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                             context.Call(promptTodayConfirmation, this.AfterTimeConfirmation);
                         }
                         else
                         {
-                            await context.PostAsync($"I looked around {request.RequestedDateTime.ToShortTimeString()}", context.Activity.AsMessageActivity().Locale);
+                            await context.PostAsync($"I looked at {request.ToSuggestionString()}", context.Activity.AsMessageActivity().Locale);
                             suggestedAppointmentRequest = response.SuggestedRequest;
                             var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
-                               response.FormattedErrorMessage().Replace("Sorry", "But sorry"),
+                               response.FormattedValidationMessage().Replace("Sorry", "But sorry"),
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                             context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
