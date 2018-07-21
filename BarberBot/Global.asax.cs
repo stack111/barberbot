@@ -22,7 +22,8 @@ namespace BarberBot
             containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
             containerBuilder.RegisterType<Shop>();
             containerBuilder.RegisterType<Appointment>();
-            
+            containerBuilder.RegisterInstance<IRepository<Barber>>(new MemoryBarberRepository());
+
 
             var container = containerBuilder.Build();
             config.DependencyResolver = new AutofacWebApiDependencyResolver(container);

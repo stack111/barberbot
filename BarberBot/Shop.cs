@@ -7,25 +7,29 @@ namespace BarberBot
     [Serializable]
     public class Shop
     {
-        private readonly StoreHours storeHours;
         private readonly TimeSpan minimumTimeBeforeClose;
         private const int UTC_to_PST_Hours = -7;
-        public Shop()
+        private readonly IRepository<Barber> barberRepository;
+
+        public StoreHours Hours { get; }
+
+        public Shop(IRepository<Barber> barberRepository)
         {
-            storeHours = new StoreHours();
+            Hours = new StoreHours();
             minimumTimeBeforeClose = TimeSpan.FromHours(1);
+            this.barberRepository = barberRepository;
         }
 
-        public bool IsShopOpen(DateTime dateTime)
+        public bool IsOpen(DateTime dateTime)
         {
             // todo: special case check for holidays           
-            storeHours.Load(dateTime);
-            if (!storeHours.Exists)
+            Hours.Load(this, dateTime);
+            if (!Hours.Exists)
             {
                 return false;
             }
-            DateTime open = storeHours.OpeningDateTime(dateTime);
-            DateTime close = storeHours.ClosingDateTime(dateTime);
+            DateTime open = Hours.OpeningDateTime(dateTime);
+            DateTime close = Hours.ClosingDateTime(dateTime);
             return dateTime >= open && dateTime <= close;
         }
 
@@ -36,7 +40,7 @@ namespace BarberBot
 
             DateTime nowDateTime = DateTime.UtcNow.AddHours(UTC_to_PST_Hours); // convert to PST.
             nowDateTime = new DateTime(nowDateTime.Year, nowDateTime.Month, nowDateTime.Day);
-            storeHours.Load(nowDateTime); // today's hours
+            Hours.Load(this, nowDateTime); // today's hours
 
             // check holidays
 
@@ -51,8 +55,8 @@ namespace BarberBot
             }
 
             // is the store open?
-            storeHours.Load(dateTimeToCheck);
-            if (!storeHours.Exists)
+            Hours.Load(this, dateTimeToCheck);
+            if (!Hours.Exists)
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
@@ -62,10 +66,10 @@ namespace BarberBot
             }
 
             // is it between hours
-            bool isWithinHours = storeHours.IsWithinHours(appointmentRequest.RequestedDateTime);
+            bool isWithinHours = Hours.IsWithinHours(appointmentRequest.RequestedDateTime);
 
             // does it meet the minimum window?
-            bool meetsMinimum = storeHours.IsWithinHours(dateTimeToCheck);
+            bool meetsMinimum = Hours.IsWithinHours(dateTimeToCheck);
             
             if (isWithinHours && meetsMinimum)
             {
@@ -133,10 +137,10 @@ namespace BarberBot
                 if (nextAvailable == null)
                 {
                     DateTime nextDateTimeCheck = nextRequest.RequestedDateTime.AddHours(1);
-                    if (!IsShopOpen(nextDateTimeCheck))
+                    if (!IsOpen(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
-                        nextDateTimeCheck = storeHours.OpeningDateTime(nextDateTimeCheck);
+                        nextDateTimeCheck = Hours.OpeningDateTime(nextDateTimeCheck);
                     }
                     nextRequest = new AppointmentRequest(this)
                     {
@@ -153,23 +157,24 @@ namespace BarberBot
         }
         public string FormattedWeekHours(DateTime dateTime)
         {
-            return storeHours.FormattedWeekHours(dateTime);
+            Hours.Load(this, dateTime);
+            return Hours.FormattedWeekHours(dateTime);
         }
 
         public string FormattedDayHours(DateTime dateTime)
         {
-            return storeHours.FormattedDayHours(dateTime);
+            return Hours.FormattedDayHours(dateTime);
         }
 
         public List<Barber> LoadBarbers(bool withAnyone)
         {
             List<Barber> barbers = new List<Barber>()
             {
-                new Barber(this) { DisplayName = "Jessica" }
+                new Barber(this, barberRepository) { DisplayName = "Jessica" }
             };
             if (withAnyone)
             {
-                barbers.Add(new Barber(this) { DisplayName = "Anyone" });
+                barbers.Add(new Barber(this, barberRepository) { DisplayName = "Anyone" });
             }
             return barbers;
         }

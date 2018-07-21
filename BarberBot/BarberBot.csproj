@@ -229,7 +229,6 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.IO.Compression.ZipFile, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\System.IO.Compression.ZipFile.4.0.1\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
       <Private>True</Private>
@@ -392,10 +391,14 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Barber.cs" />
     <Compile Include="BarberAvailabilityResponse.cs" />
+    <Compile Include="BarberHours.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Hours.cs" />
+    <Compile Include="IRepository.cs" />
+    <Compile Include="MemoryBarberRepository.cs" />
     <Compile Include="Models\AppointmentRequestDialog.cs" />
     <Compile Include="Models\PromptAppointmentRequestDateTime.cs" />
     <Compile Include="Models\RootDialog.cs" />

@@ -7,20 +7,9 @@ using System.Web;
 namespace BarberBot
 {
     [Serializable]
-    public class StoreHours
+    public class StoreHours : Hours<Shop>
     {
-        public int OpeningHour { get; set; }
-        public int ClosingHour { get; set; }
-
-        public bool Exists
-        {
-            get
-            {
-                return !(OpeningHour == 0 && ClosingHour == 0);
-            }
-        }
-
-        public void Load(DateTime dateTime)
+        public override void Load(Shop instance, DateTime dateTime)
         {
             // todo: special case check for holidays
 
@@ -44,25 +33,6 @@ namespace BarberBot
 
             OpeningHour = openHour;
             ClosingHour = closeHour;
-        }
-
-        public DateTime ClosingDateTime(DateTime dateTime)
-        {
-            Load(dateTime);
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, ClosingHour, 0, 0, DateTimeKind.Local);
-        }
-
-        public DateTime OpeningDateTime(DateTime dateTime)
-        {
-            Load(dateTime);
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, OpeningHour, 0, 0, DateTimeKind.Local);
-        }
-
-        public bool IsWithinHours(DateTime dateTime)
-        {
-            var opening = OpeningDateTime(dateTime);
-            var closing = ClosingDateTime(dateTime);
-            return dateTime >= opening && dateTime <= closing;
         }
 
         public string FormattedWeekHours(DateTime dateTime)
@@ -89,14 +59,12 @@ namespace BarberBot
             return stringBuilder.ToString();
         }
 
-        public string FormattedDayHours(DateTime dateTime)
+        public override string FormattedDayHours(DateTime dateTime)
         {
-            Load(dateTime);
             if (Exists)
             {
-                DateTime opening = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, OpeningHour, 0, 0);
-                DateTime closing = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, ClosingHour, 0, 0);
-                return $"{dateTime.ToString("ddd")} {String.Format("{0:t}", opening)} - {String.Format("{0:t}", closing)}";
+                
+                return $"{dateTime.ToString("ddd")} {String.Format("{0:t}", OpeningDateTime(dateTime))} - {String.Format("{0:t}", ClosingDateTime(dateTime))}";
             }
             else
             {

@@ -109,11 +109,16 @@
                     {
                         var parsedTime = DateTime.Parse(modelResult["value"]);
                         parsedTime = DateTime.SpecifyKind(parsedTime, DateTimeKind.Local);
+                        if(parsedTime.Date.Year < PSTDate.Year)
+                        {
+                            parsedTime = new DateTime(PSTDate.Year, parsedTime.Month, parsedTime.Day, parsedTime.Hour, parsedTime.Minute, 0);
+                        }
+
                         if(parsedTime.Date < PSTDate)
                         {
                             // fix bias for past days of the week
                             var fix = parsedTime.Next(parsedTime.DayOfWeek);
-                            parsedTime = new DateTime(fix.Year, fix.Month, fix.Day, parsedTime.Hour, parsedTime.Minute, 0);
+                            parsedTime = new DateTime(PSTDate.Year, fix.Month, fix.Day, parsedTime.Hour, parsedTime.Minute, 0);
                         }
 
                         if (parsedTime.Date == PSTDate && parsedTime.Hour < PSTDateTime.Hour && 
@@ -145,12 +150,16 @@
                     else if (modelResult["type"] == "date")
                     {
                         var parsedDate = DateTime.Parse(modelResult["value"]);
+                        if (parsedDate.Year < PSTDate.Year)
+                        {
+                            parsedDate = parsedDate.SafeCreateFromValue(PSTDate.Year, parsedDate.Month, parsedDate.Day);
+                        }
 
                         if (parsedDate < PSTDate)
                         {
                             // fix bias for past Saturday/Sunday
                             var fix = parsedDate.Next(parsedDate.DayOfWeek);
-                            parsedDate = new DateTime(fix.Year, fix.Month, fix.Day);
+                            parsedDate = fix.SafeCreateFromValue(PSTDate.Year, fix.Month, fix.Day);
                         }
 
                         request.RequestedDateTime = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, PSTDateTime.Hour, PSTDateTime.Minute, 0, DateTimeKind.Local);
