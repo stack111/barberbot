@@ -18,6 +18,9 @@ namespace BarberBot
                     break;
                 case DayOfWeek.Monday:
                 case DayOfWeek.Tuesday:
+                    openHour = 8;
+                    closeHour = 20;
+                    break;
                 case DayOfWeek.Wednesday:
                     openHour = 0;
                     closeHour = 0;

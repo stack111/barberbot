@@ -9,9 +9,9 @@ namespace BarberBot
     public class Barber
     {
         private readonly Shop shop;
-        private readonly IRepository<Barber> repository;
+        private readonly IHoursRepository<Barber> repository;
 
-        public Barber(Shop shop, IRepository<Barber> repository)
+        public Barber(Shop shop, IHoursRepository<Barber> repository)
         {
             this.shop = shop;
             this.repository = repository;
@@ -32,14 +32,15 @@ namespace BarberBot
             // check working days / hours
             // check if already reserved
             await repository.LoadHoursAsync(this, appointmentRequest.RequestedDateTime);
-            bool available = await repository.IsAppointmentAvailableAsync(this, appointmentRequest.RequestedDateTime);
-            bool barberAvailability = Hours.Exists && available;
+            bool available = await repository.IsAvailableAsync(this, appointmentRequest.RequestedDateTime);
+            bool withinHours = Hours.IsWithinHours(appointmentRequest.RequestedDateTime);
+            bool barberAvailability = Hours.Exists && available && withinHours;
             // if not available get next available barber
             BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse() { IsAvailable = barberAvailability, Barber = this };
 
-            if (!Hours.Exists || !available)
+            if (!Hours.Exists || !available || !withinHours)
             {
-                availabilityResponse.ValidationResults.Add(new ValidationResult() { Message = $"{DisplayName} is not available on this date or time." });
+                availabilityResponse.ValidationResults.Add(new ValidationResult() { Message = $"{DisplayName} is not available on this date or time. " });
             }
 
             return availabilityResponse;
@@ -53,14 +54,12 @@ namespace BarberBot
                 return await shop.NextAvailableBarberAsync(appointmentRequest);
             }
 
-            // look at working days / hours 
-            await repository.LoadHoursAsync(this, appointmentRequest.RequestedDateTime);
-            bool available = await repository.IsAppointmentAvailableAsync(this, appointmentRequest.RequestedDateTime);
+            bool available = (await IsAvailableAsync(appointmentRequest)).IsAvailable;
             // create a request based on the incoming request with the right datetime, shop, and barber.
             AppointmentRequest suggestedAppointment = new AppointmentRequest(shop);
             suggestedAppointment.CopyFrom(appointmentRequest);
 
-            if (Hours.Exists && available)
+            if (available)
             {
                 return suggestedAppointment;
             }
@@ -68,7 +67,7 @@ namespace BarberBot
             {
                 int attempts = 0;
                 DateTime nextDateTimeCheck = suggestedAppointment.RequestedDateTime;
-                while (!Hours.Exists && !available)
+                while (!available && attempts < 5)
                 {
                     nextDateTimeCheck = suggestedAppointment.RequestedDateTime.AddHours(1);
                     if (!shop.IsOpen(nextDateTimeCheck))
@@ -77,16 +76,12 @@ namespace BarberBot
                         nextDateTimeCheck = shop.Hours.OpeningDateTime(nextDateTimeCheck);
                     }
 
-                    Hours.Load(this, nextDateTimeCheck);
-                    available = await repository.IsAppointmentAvailableAsync(this, appointmentRequest.RequestedDateTime);
+                    suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
+                    available = (await IsAvailableAsync(suggestedAppointment)).IsAvailable;
                     attempts++;
-                    if(attempts > 5)
-                    {
-                        break;
-                    }
                 }
 
-                if(attempts < 5 && Hours.Exists && available)
+                if(attempts < 5 && available)
                 {
                     suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
                 }

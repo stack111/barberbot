@@ -5,7 +5,8 @@ namespace BarberBot
 {
     public interface IRepository<T>
     {
-        Task LoadHoursAsync(Barber instance, DateTime dateTime);
-        Task<bool> IsAppointmentAvailableAsync(Barber instance, DateTime dateTime);
+        Task<bool> ExistsAsync(string id, DateTime appointmentTime);
+        Task<bool> ExistsAsync(T instance);
+        Task SaveAsync(T instance);
     }
 }

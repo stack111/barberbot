@@ -397,7 +397,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Hours.cs" />
+    <Compile Include="IHoursRepository.cs" />
     <Compile Include="IRepository.cs" />
+    <Compile Include="MemoryAppointmentRepository.cs" />
     <Compile Include="MemoryBarberRepository.cs" />
     <Compile Include="Models\AppointmentRequestDialog.cs" />
     <Compile Include="Models\PromptAppointmentRequestDateTime.cs" />

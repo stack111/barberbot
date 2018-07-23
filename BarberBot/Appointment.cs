@@ -1,24 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace BarberBot
 {
     [Serializable]
     public class Appointment
     {
-        private Shop shop;
-        private Barber barber;
-        private DateTime dateTime;
+        private readonly IRepository<Appointment> repository;
+
+        public Shop Shop { get; private set; }
+        public Barber Barber { get; private set; }
+        public DateTime AppointmentDateTime { get; private set; }
+
+        public Appointment(IRepository<Appointment> repository)
+        {
+            this.repository = repository;
+        }
 
         public void CopyFrom(AppointmentRequest request)
         {
-            shop = request.Shop;
-            barber = request.RequestedBarber;
-            dateTime = request.RequestedDateTime;
+            Shop = request.Shop;
+            Barber = request.RequestedBarber;
+            AppointmentDateTime = request.RequestedDateTime;
         }
 
-
+        public async Task BookAsync()
+        {
+            await repository.SaveAsync(this);
+        }
     }
 }

@@ -9,11 +9,11 @@ namespace BarberBot
     {
         private readonly TimeSpan minimumTimeBeforeClose;
         private const int UTC_to_PST_Hours = -7;
-        private readonly IRepository<Barber> barberRepository;
+        private readonly IHoursRepository<Barber> barberRepository;
 
         public StoreHours Hours { get; }
 
-        public Shop(IRepository<Barber> barberRepository)
+        public Shop(IHoursRepository<Barber> barberRepository)
         {
             Hours = new StoreHours();
             minimumTimeBeforeClose = TimeSpan.FromHours(1);
@@ -123,7 +123,7 @@ namespace BarberBot
                 RequestedDateTime = appointmentRequest.RequestedDateTime,
             };
             int attempts = 0;
-            while(nextAvailable == null || attempts < 5)
+            while (nextAvailable == null && attempts < 5)
             {
                 foreach (var barber in barbers)
                 {

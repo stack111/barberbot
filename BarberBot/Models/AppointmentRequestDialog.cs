@@ -76,10 +76,12 @@ namespace BarberBot.Models
                                $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} on {string.Format("{0} {1:m} at {1:t}", appointmentRequest.RequestedDateTime.ToString("ddd"), appointmentRequest.RequestedDateTime)}?",
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
+                    request.CopyFrom(appointmentRequest);
                     context.Call(promptTodayConfirmation, this.AfterAppointmentConfirmation);
                 }
                 else
                 {
+                    request.ResetDateTime();
                     context.Done(false);
                 }
             }
@@ -94,6 +96,8 @@ namespace BarberBot.Models
             bool confirmed = await result;
             if (confirmed)
             {
+                appointment.CopyFrom(request);
+                await appointment.BookAsync();
                 await context.PostAsync("Ok great, see you then! As a friendly reminder we have a 15 minute late cancellation for no-shows.", context.Activity.AsMessageActivity().Locale);
                 context.Done(true);
             }
