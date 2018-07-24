@@ -5,8 +5,10 @@ namespace BarberBot
     [Serializable]
     public abstract class Hours<T>
     {
+        public const int UTC_to_PST_Hours = -7;
         public int OpeningHour { get; protected set; }
         public int ClosingHour { get; protected set; }
+        public abstract DateTime DateTime { get; protected set; }
 
         public bool Exists
         {
@@ -18,23 +20,26 @@ namespace BarberBot
 
         public abstract void Load(T instance, DateTime dateTime);
 
-        public abstract string FormattedDayHours(DateTime dateTime);
+        public abstract string FormattedDayHours();
 
-        public DateTime ClosingDateTime(DateTime dateTime)
+        public DateTime ClosingDateTime()
         {
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, ClosingHour, 0, 0, DateTimeKind.Local);
+            return new DateTime(DateTime.Year, DateTime.Month, DateTime.Day, ClosingHour, 0, 0, DateTimeKind.Local);
         }
 
-        public DateTime OpeningDateTime(DateTime dateTime)
+        public DateTime OpeningDateTime()
         {
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, OpeningHour, 0, 0, DateTimeKind.Local);
+            return new DateTime(DateTime.Year, DateTime.Month, DateTime.Day, OpeningHour, 0, 0, DateTimeKind.Local);
         }
 
         public bool IsWithinHours(DateTime dateTime)
         {
-            var opening = OpeningDateTime(dateTime);
-            var closing = ClosingDateTime(dateTime);
+            var opening = OpeningDateTime();
+            var closing = ClosingDateTime();
             return dateTime >= opening && dateTime <= closing;
         }
+
+        public static TimeSpan AppointmentLength = TimeSpan.FromHours(1);
+        public static TimeSpan AppointmentMiddleLength = TimeSpan.FromMinutes(30);
     }
 }

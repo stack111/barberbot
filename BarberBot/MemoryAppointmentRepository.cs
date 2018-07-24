@@ -12,17 +12,10 @@ namespace BarberBot
 
         public Task<bool> ExistsAsync(string id, DateTime appointmentTime)
         {
-            if (BookedAppointments.ContainsKey(appointmentTime))
-            {
-                List<Appointment> appointments = BookedAppointments[appointmentTime];
-                bool existingAppointment = appointments
-                    .Any(appointment => string.Equals(id, appointment.Barber.DisplayName, StringComparison.OrdinalIgnoreCase));
-                return Task.FromResult(existingAppointment);
-            }
-            else
-            {
-                return Task.FromResult(false);
-            }
+            // look for appointments between the range of the appointmentTime - half appointment length to appointmentTime + length for the id
+            // this works because we base on rounding rules of 1-15 => 0 - 16-29 => 30 etc..
+            var existingKeyValuePairs = BookedAppointments.Where(appt => appt.Key >= appointmentTime.Add(BarberHours.AppointmentMiddleLength.Negate()) && appt.Key < appointmentTime.Add(BarberHours.AppointmentLength) && appt.Value != null && appt.Value.Any(b => string.Equals(b.Barber.DisplayName, id, StringComparison.OrdinalIgnoreCase)));
+            return Task.FromResult(existingKeyValuePairs != null && existingKeyValuePairs.Any());
         }
 
         public Task<bool> ExistsAsync(Appointment instance)

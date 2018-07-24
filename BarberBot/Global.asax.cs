@@ -23,7 +23,7 @@ namespace BarberBot
             containerBuilder.Register<IRepository<Appointment>>(f => new MemoryAppointmentRepository());
             containerBuilder.Register(f => new Appointment(f.Resolve<IRepository<Appointment>>()));
             containerBuilder.Register<IHoursRepository<Barber>>(f => 
-            new MemoryBarberRepository(f.Resolve<IRepository<Appointment>>()));
+            new MemoryBarberHoursRepository(f.Resolve<IRepository<Appointment>>()));
             containerBuilder.RegisterType<Shop>();
 
 

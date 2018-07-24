@@ -9,10 +9,23 @@ namespace BarberBot
     [Serializable]
     public class StoreHours : Hours<Shop>
     {
+        private DateTime dateTime = DateTime.MinValue;
+        public override DateTime DateTime
+        {
+            get
+            {
+                return dateTime;
+            }
+            protected set
+            {
+                dateTime = value;
+            }
+        }
+
         public override void Load(Shop instance, DateTime dateTime)
         {
             // todo: special case check for holidays
-
+            DateTime = dateTime;
             int openHour = 0, closeHour = 0;
             switch (dateTime.DayOfWeek)
             {
@@ -35,9 +48,9 @@ namespace BarberBot
             ClosingHour = closeHour;
         }
 
-        public string FormattedWeekHours(DateTime dateTime)
+        public string FormattedWeekHours()
         {
-            DateTime date = dateTime.Date;
+            DateTime date = DateTime.Date;
             StringBuilder stringBuilder = new StringBuilder();
             
 
@@ -53,18 +66,18 @@ namespace BarberBot
             {
                 StoreHours day = new StoreHours();
                 DateTime dateTimeCheck = date.AddDays(-1 * days);
-                stringBuilder.AppendLine(day.FormattedDayHours(dateTimeCheck));
+                stringBuilder.AppendLine(day.FormattedDayHours());
             }
 
             return stringBuilder.ToString();
         }
 
-        public override string FormattedDayHours(DateTime dateTime)
+        public override string FormattedDayHours()
         {
             if (Exists)
             {
                 
-                return $"{dateTime.ToString("ddd")} {String.Format("{0:t}", OpeningDateTime(dateTime))} - {String.Format("{0:t}", ClosingDateTime(dateTime))}";
+                return $"{DateTime.ToString("ddd")} {String.Format("{0:t}", OpeningDateTime())} - {String.Format("{0:t}", ClosingDateTime())}";
             }
             else
             {

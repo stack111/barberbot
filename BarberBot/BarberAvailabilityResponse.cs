@@ -16,5 +16,7 @@ namespace BarberBot
         public bool IsAvailable { get; set; }
         public List<ValidationResult> ValidationResults { get; set; }
         public Barber Barber { get; internal set; }
+        public bool IsWithinHours { get; internal set; }
+        public bool IsExistingAppointment { get; internal set; }
     }
 }

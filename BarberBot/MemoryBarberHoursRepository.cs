@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 namespace BarberBot
 {
     [Serializable]
-    public class MemoryBarberRepository : IHoursRepository<Barber>
+    public class MemoryBarberHoursRepository : IHoursRepository<Barber>
     {
         private readonly Dictionary<string, BarberHours> BarberHours;
         private readonly IRepository<Appointment> appointmentRepository;
-        public MemoryBarberRepository(IRepository<Appointment> appointmentRepository)
+        public MemoryBarberHoursRepository(IRepository<Appointment> appointmentRepository)
         {
             BarberHours = new Dictionary<string, BarberHours>()
             {
@@ -24,7 +24,9 @@ namespace BarberBot
 
         public async Task<bool> IsAvailableAsync(Barber instance, DateTime dateTime)
         {
-            return !await appointmentRepository.ExistsAsync(instance.DisplayName, dateTime);
+            bool exists = await appointmentRepository.ExistsAsync(instance.DisplayName, dateTime);
+
+            return !exists;
         }
 
         public Task LoadHoursAsync(Barber instance, DateTime dateTime)

@@ -36,7 +36,13 @@ namespace BarberBot
             bool withinHours = Hours.IsWithinHours(appointmentRequest.RequestedDateTime);
             bool barberAvailability = Hours.Exists && available && withinHours;
             // if not available get next available barber
-            BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse() { IsAvailable = barberAvailability, Barber = this };
+            BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse()
+            {
+                IsAvailable = barberAvailability,
+                IsWithinHours = withinHours,
+                IsExistingAppointment = !available, // negate since it is actually an existing appointment
+                Barber = this
+            };
 
             if (!Hours.Exists || !available || !withinHours)
             {
@@ -54,12 +60,12 @@ namespace BarberBot
                 return await shop.NextAvailableBarberAsync(appointmentRequest);
             }
 
-            bool available = (await IsAvailableAsync(appointmentRequest)).IsAvailable;
+            BarberAvailabilityResponse availableResponse = await IsAvailableAsync(appointmentRequest);
             // create a request based on the incoming request with the right datetime, shop, and barber.
             AppointmentRequest suggestedAppointment = new AppointmentRequest(shop);
             suggestedAppointment.CopyFrom(appointmentRequest);
 
-            if (available)
+            if (availableResponse.IsAvailable)
             {
                 return suggestedAppointment;
             }
@@ -67,21 +73,21 @@ namespace BarberBot
             {
                 int attempts = 0;
                 DateTime nextDateTimeCheck = suggestedAppointment.RequestedDateTime;
-                while (!available && attempts < 5)
+                while (!availableResponse.IsAvailable && attempts < 5)
                 {
-                    nextDateTimeCheck = suggestedAppointment.RequestedDateTime.AddHours(1);
+                    nextDateTimeCheck = suggestedAppointment.RequestedDateTime.Add(BarberHours.AppointmentMiddleLength);
                     if (!shop.IsOpen(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
-                        nextDateTimeCheck = shop.Hours.OpeningDateTime(nextDateTimeCheck);
+                        nextDateTimeCheck = shop.OpeningDateTime(nextDateTimeCheck);
                     }
 
                     suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
-                    available = (await IsAvailableAsync(suggestedAppointment)).IsAvailable;
+                    availableResponse = await IsAvailableAsync(suggestedAppointment);
                     attempts++;
                 }
 
-                if(attempts < 5 && available)
+                if(attempts < 5 && availableResponse.IsAvailable)
                 {
                     suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
                 }

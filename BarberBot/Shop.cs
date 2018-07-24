@@ -8,28 +8,58 @@ namespace BarberBot
     public class Shop
     {
         private readonly TimeSpan minimumTimeBeforeClose;
-        private const int UTC_to_PST_Hours = -7;
         private readonly IHoursRepository<Barber> barberRepository;
 
-        public StoreHours Hours { get; }
+        private StoreHours Hours;
 
         public Shop(IHoursRepository<Barber> barberRepository)
         {
             Hours = new StoreHours();
-            minimumTimeBeforeClose = TimeSpan.FromHours(1);
+            minimumTimeBeforeClose = StoreHours.AppointmentLength;
             this.barberRepository = barberRepository;
+        }
+
+        public bool CanAcceptCustomers(DateTime dateTime)
+        {
+            if (!IsOpen(dateTime))
+            {
+                return false;
+            }
+            DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours);
+            StoreHours nowHours = new StoreHours();
+            nowHours.Load(this, nowDateTime);
+            if (dateTime < nowDateTime)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public DateTime OpeningDateTime(DateTime dateTime)
+        {
+            StoreHours hours = new StoreHours();
+            hours.Load(this, dateTime);
+            return hours.OpeningDateTime();
+        }
+
+        public DateTime ClosingDateTime(DateTime dateTime)
+        {
+            StoreHours hours = new StoreHours();
+            hours.Load(this, dateTime);
+            return hours.ClosingDateTime();
         }
 
         public bool IsOpen(DateTime dateTime)
         {
             // todo: special case check for holidays           
+            
             Hours.Load(this, dateTime);
             if (!Hours.Exists)
             {
                 return false;
             }
-            DateTime open = Hours.OpeningDateTime(dateTime);
-            DateTime close = Hours.ClosingDateTime(dateTime);
+            DateTime open = Hours.OpeningDateTime();
+            DateTime close = Hours.ClosingDateTime();
             return dateTime >= open && dateTime <= close;
         }
 
@@ -38,9 +68,8 @@ namespace BarberBot
             AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse();
             var dateTimeToCheck = appointmentRequest.RequestedDateTime.Add(minimumTimeBeforeClose);
 
-            DateTime nowDateTime = DateTime.UtcNow.AddHours(UTC_to_PST_Hours); // convert to PST.
-            nowDateTime = new DateTime(nowDateTime.Year, nowDateTime.Month, nowDateTime.Day);
-            Hours.Load(this, nowDateTime); // today's hours
+            DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours); // convert to PST.
+            Hours.Load(this, nowDateTime.Date); // today's hours
 
             // check holidays
 
@@ -86,7 +115,7 @@ namespace BarberBot
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = $"The appointment needs to be at least 1 hour before closing. Hours are {FormattedDayHours(appointmentRequest.RequestedDateTime)}. "
+                    Message = $"The appointment needs to be at least {StoreHours.AppointmentLength.TotalMinutes} minutes before closing. Hours are {FormattedDayHours(appointmentRequest.RequestedDateTime)}. "
                 });
             }
             return response;
@@ -117,17 +146,16 @@ namespace BarberBot
             var barbers = LoadBarbers(false);
 
             Barber nextAvailable = null;
-            AppointmentRequest nextRequest = new AppointmentRequest(this)
-            {
-                RequestedBarber = appointmentRequest.RequestedBarber,
-                RequestedDateTime = appointmentRequest.RequestedDateTime,
-            };
+            AppointmentRequest nextRequest = new AppointmentRequest(this);
+            nextRequest.CopyFrom(appointmentRequest);
+            
             int attempts = 0;
             while (nextAvailable == null && attempts < 5)
             {
                 foreach (var barber in barbers)
                 {
-                    if ((await barber.IsAvailableAsync(nextRequest)).IsAvailable)
+                    BarberAvailabilityResponse availabilityResponse = await barber.IsAvailableAsync(nextRequest);
+                    if (availabilityResponse.IsAvailable)
                     {
                         nextAvailable = barber;
                         break;
@@ -136,11 +164,12 @@ namespace BarberBot
 
                 if (nextAvailable == null)
                 {
-                    DateTime nextDateTimeCheck = nextRequest.RequestedDateTime.AddHours(1);
+                    DateTime nextDateTimeCheck = nextRequest.RequestedDateTime.Add(BarberHours.AppointmentMiddleLength);
                     if (!IsOpen(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
-                        nextDateTimeCheck = Hours.OpeningDateTime(nextDateTimeCheck);
+                        Hours.Load(this, nextDateTimeCheck);
+                        nextDateTimeCheck = Hours.OpeningDateTime();
                     }
                     nextRequest = new AppointmentRequest(this)
                     {
@@ -158,12 +187,13 @@ namespace BarberBot
         public string FormattedWeekHours(DateTime dateTime)
         {
             Hours.Load(this, dateTime);
-            return Hours.FormattedWeekHours(dateTime);
+            return Hours.FormattedWeekHours();
         }
 
         public string FormattedDayHours(DateTime dateTime)
         {
-            return Hours.FormattedDayHours(dateTime);
+            Hours.Load(this, dateTime);
+            return Hours.FormattedDayHours();
         }
 
         public List<Barber> LoadBarbers(bool withAnyone)

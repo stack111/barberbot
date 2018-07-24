@@ -50,7 +50,7 @@ namespace BarberBot
                 // barber is not available
                 // we could either suggest the next available barber's time
                 // and we could find when the barber is available next
-                AppointmentRequest suggestedRequest = await Shop.NextAvailableBarberAsync(this);
+                AppointmentRequest suggestedRequest = await RequestedBarber.NextAvailableRequestAsync(this);
                 var response = new AppointmentAvailabilityResponse()
                 {
                     IsAvailable = false,
@@ -63,17 +63,52 @@ namespace BarberBot
             else
             {
                 // shop is not available
-                // show the hours for the week and suggest the next available spot for
-                // the barber
-                AppointmentRequest nextRequest = await RequestedBarber.NextAvailableRequestAsync(this);
-                var response = new AppointmentAvailabilityResponse()
+                // show the hours for the week and suggest the next available appointment
+                DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours);
+                AppointmentRequest nextRequest = null;
+                AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse()
                 {
                     IsAvailable = false,
-                    RoundedRequestedTime = roundedRequestedDateTime,
-                    SuggestedRequest = nextRequest
+                    RoundedRequestedTime = roundedRequestedDateTime
                 };
-                response.ValidationResults.AddRange(shopResponse.ValidationResults);
-                response.ValidationResults.AddRange(barberResponse.ValidationResults);
+                if (!shopResponse.IsAvailable)
+                {
+                    nextRequest = new AppointmentRequest(Shop);
+                    nextRequest.CopyFrom(this);
+                    if (nextRequest.RequestedDateTime < nowDateTime)
+                    {
+                        int attempts = 0;
+                        while (!Shop.CanAcceptCustomers(nextRequest.RequestedDateTime) && attempts < 5)
+                        {
+                            nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
+                            nextRequest.RequestedDateTime = Shop.OpeningDateTime(nextRequest.RequestedDateTime);
+                            attempts++;
+                        }
+                    }
+                    nextRequest = await Shop.NextAvailableBarberAsync(nextRequest);
+                    response.ValidationResults.AddRange(shopResponse.ValidationResults);
+                }
+                else if (!barberResponse.IsAvailable)
+                {
+                    nextRequest = new AppointmentRequest(Shop);
+                    nextRequest.CopyFrom(this);
+                    if (nextRequest.RequestedDateTime < nowDateTime)
+                    {
+                        int attempts = 0;
+                        nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
+                        RequestedBarber.Hours.Load(RequestedBarber, nextRequest.RequestedDateTime);
+                        while (!Shop.IsOpen(nextRequest.RequestedDateTime) && !RequestedBarber.Hours.IsWithinHours(nextRequest.RequestedDateTime) && attempts < 5)
+                        {
+                            nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
+                            nextRequest.RequestedDateTime = Shop.OpeningDateTime(nextRequest.RequestedDateTime);
+                            attempts++;
+                        }
+                    }
+                    nextRequest = await RequestedBarber.NextAvailableRequestAsync(nextRequest);
+                    response.ValidationResults.AddRange(barberResponse.ValidationResults);
+                }
+
+                response.SuggestedRequest = nextRequest;
                 return response;
             }
         }

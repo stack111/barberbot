@@ -21,7 +21,7 @@ namespace BarberBot
 
         public string FormattedValidationMessage()
         {
-            StringBuilder builder = new StringBuilder("Sorry! ");
+            StringBuilder builder = new StringBuilder();
             foreach (var msg in ValidationResults)
             {
                 builder.Append(msg.Message);

@@ -400,7 +400,7 @@
     <Compile Include="IHoursRepository.cs" />
     <Compile Include="IRepository.cs" />
     <Compile Include="MemoryAppointmentRepository.cs" />
-    <Compile Include="MemoryBarberRepository.cs" />
+    <Compile Include="MemoryBarberHoursRepository.cs" />
     <Compile Include="Models\AppointmentRequestDialog.cs" />
     <Compile Include="Models\PromptAppointmentRequestDateTime.cs" />
     <Compile Include="Models\RootDialog.cs" />
