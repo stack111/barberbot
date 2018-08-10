@@ -17,6 +17,6 @@ namespace BarberBot
         public List<ValidationResult> ValidationResults { get; set; }
         public Barber Barber { get; internal set; }
         public bool IsWithinHours { get; internal set; }
-        public bool IsExistingAppointment { get; internal set; }
+        public bool IsConflictingAppointment { get; internal set; }
     }
 }

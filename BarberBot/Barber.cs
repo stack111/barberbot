@@ -9,12 +9,13 @@ namespace BarberBot
     public class Barber
     {
         private readonly Shop shop;
-        private readonly IHoursRepository<Barber> repository;
-
-        public Barber(Shop shop, IHoursRepository<Barber> repository)
+        private readonly IHoursRepository<Barber> hoursRepository;
+        private readonly IRepository<Appointment> appointmentRepository;
+        public Barber(Shop shop, IHoursRepository<Barber> hoursRespository, IRepository<Appointment> appointmentRepository)
         {
             this.shop = shop;
-            this.repository = repository;
+            this.hoursRepository = hoursRespository;
+            this.appointmentRepository = appointmentRepository;
         }
 
         [JsonProperty(PropertyName = "displayName")]
@@ -31,20 +32,22 @@ namespace BarberBot
 
             // check working days / hours
             // check if already reserved
-            await repository.LoadHoursAsync(this, appointmentRequest.RequestedDateTime);
-            bool available = await repository.IsAvailableAsync(this, appointmentRequest.RequestedDateTime);
-            bool withinHours = Hours.IsWithinHours(appointmentRequest.RequestedDateTime);
-            bool barberAvailability = Hours.Exists && available && withinHours;
+            bool available = await hoursRepository.IsAvailableAsync(this, appointmentRequest.StartDateTime);
+            Appointment appointment = new Appointment(appointmentRepository);
+            appointment.CopyFrom(appointmentRequest);
+            bool conflictingAppointment = await appointment.ExistsAsync();
+            bool barberAvailability = Hours.Exists && available && !conflictingAppointment;
+            bool withinHours = Hours.IsWithinHours(appointmentRequest.StartDateTime);
             // if not available get next available barber
             BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse()
             {
                 IsAvailable = barberAvailability,
                 IsWithinHours = withinHours,
-                IsExistingAppointment = !available, // negate since it is actually an existing appointment
+                IsConflictingAppointment = conflictingAppointment,
                 Barber = this
             };
 
-            if (!Hours.Exists || !available || !withinHours)
+            if (!barberAvailability)
             {
                 availabilityResponse.ValidationResults.Add(new ValidationResult() { Message = $"{DisplayName} is not available on this date or time. " });
             }
@@ -72,24 +75,24 @@ namespace BarberBot
             else
             {
                 int attempts = 0;
-                DateTime nextDateTimeCheck = suggestedAppointment.RequestedDateTime;
+                DateTime nextDateTimeCheck = suggestedAppointment.StartDateTime;
                 while (!availableResponse.IsAvailable && attempts < 5)
                 {
-                    nextDateTimeCheck = suggestedAppointment.RequestedDateTime.Add(BarberHours.AppointmentMiddleLength);
+                    nextDateTimeCheck = suggestedAppointment.StartDateTime.Add(BarberHours.AppointmentMiddleLength);
                     if (!shop.IsOpen(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
                         nextDateTimeCheck = shop.OpeningDateTime(nextDateTimeCheck);
                     }
 
-                    suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
+                    suggestedAppointment.StartDateTime = nextDateTimeCheck;
                     availableResponse = await IsAvailableAsync(suggestedAppointment);
                     attempts++;
                 }
 
                 if(attempts < 5 && availableResponse.IsAvailable)
                 {
-                    suggestedAppointment.RequestedDateTime = nextDateTimeCheck;
+                    suggestedAppointment.StartDateTime = nextDateTimeCheck;
                 }
                 else
                 {

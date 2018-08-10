@@ -9,7 +9,7 @@ namespace BarberBot
     public class MemoryBarberHoursRepository : IHoursRepository<Barber>
     {
         private readonly Dictionary<string, BarberHours> BarberHours;
-        private readonly IRepository<Appointment> appointmentRepository;
+        
         public MemoryBarberHoursRepository(IRepository<Appointment> appointmentRepository)
         {
             BarberHours = new Dictionary<string, BarberHours>()
@@ -19,17 +19,15 @@ namespace BarberBot
                             }
                 }
             };
-            this.appointmentRepository = appointmentRepository;
         }
 
         public async Task<bool> IsAvailableAsync(Barber instance, DateTime dateTime)
         {
-            bool exists = await appointmentRepository.ExistsAsync(instance.DisplayName, dateTime);
-
-            return !exists;
+            await LoadHoursAsync(instance, dateTime);
+            return instance.Hours.Exists && instance.Hours.IsWithinHours(dateTime);
         }
 
-        public Task LoadHoursAsync(Barber instance, DateTime dateTime)
+        private Task LoadHoursAsync(Barber instance, DateTime dateTime)
         {
             var hours = BarberHours[instance.DisplayName];
             hours.Load(instance, dateTime);

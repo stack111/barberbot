@@ -21,10 +21,10 @@ namespace BarberBot
         public Task<bool> ExistsAsync(Appointment instance)
         {
             // todo filter by shop
-            if (BookedAppointments.ContainsKey(instance.AppointmentDateTime))
+            if (BookedAppointments.ContainsKey(instance.StartDateTime))
             {
-                List<Appointment> appointments = BookedAppointments[instance.AppointmentDateTime];
-                return Task.FromResult(!appointments.Any(appointment => string.Equals(instance.Barber.DisplayName, appointment.Barber.DisplayName, StringComparison.OrdinalIgnoreCase)));
+                List<Appointment> appointments = BookedAppointments[instance.StartDateTime];
+                return Task.FromResult(appointments.Any(appointment => string.Equals(instance.Barber.DisplayName, appointment.Barber.DisplayName, StringComparison.OrdinalIgnoreCase)));
             }
             else
             {
@@ -34,9 +34,9 @@ namespace BarberBot
 
         public Task SaveAsync(Appointment instance)
         {
-            if (BookedAppointments.ContainsKey(instance.AppointmentDateTime))
+            if (BookedAppointments.ContainsKey(instance.StartDateTime))
             {
-                List<Appointment> appointments = BookedAppointments[instance.AppointmentDateTime];
+                List<Appointment> appointments = BookedAppointments[instance.StartDateTime];
                 appointments = appointments ?? new List<Appointment>();
                 List<Appointment> updatedAppointments = new List<Appointment>(appointments.Capacity);
                 foreach(var existingAppointment in appointments)
@@ -47,7 +47,7 @@ namespace BarberBot
                     }
                 }
                 updatedAppointments.Add(instance);
-                BookedAppointments[instance.AppointmentDateTime] = updatedAppointments;
+                BookedAppointments[instance.StartDateTime] = updatedAppointments;
             }
             else
             {
@@ -55,7 +55,7 @@ namespace BarberBot
                 {
                     instance
                 };
-                BookedAppointments.Add(instance.AppointmentDateTime, updatedAppointments);
+                BookedAppointments.Add(instance.StartDateTime, updatedAppointments);
             }
             return Task.CompletedTask;
         }

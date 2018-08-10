@@ -17,7 +17,7 @@ namespace BarberBot
             Shop = shop;
         }
 
-        public DateTime RequestedDateTime { get; set; }
+        public DateTime StartDateTime { get; set; }
 
         public Barber RequestedBarber { get; set; }
 
@@ -25,7 +25,7 @@ namespace BarberBot
 
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync()
         {
-            RequestedDateTime = await RoundAppointmentDateTimeAsync(RequestedDateTime);
+            StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime);
             
             var shopResponse = await Shop.IsAvailableAsync(this);
             BarberAvailabilityResponse barberResponse = await RequestedBarber.IsAvailableAsync(this);
@@ -75,13 +75,13 @@ namespace BarberBot
                 {
                     nextRequest = new AppointmentRequest(Shop);
                     nextRequest.CopyFrom(this);
-                    if (nextRequest.RequestedDateTime < nowDateTime)
+                    if (nextRequest.StartDateTime < nowDateTime)
                     {
                         int attempts = 0;
-                        while (!Shop.CanAcceptCustomers(nextRequest.RequestedDateTime) && attempts < 5)
+                        while (!Shop.CanAcceptCustomers(nextRequest.StartDateTime) && attempts < 5)
                         {
-                            nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
-                            nextRequest.RequestedDateTime = Shop.OpeningDateTime(nextRequest.RequestedDateTime);
+                            nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
+                            nextRequest.StartDateTime = Shop.OpeningDateTime(nextRequest.StartDateTime);
                             attempts++;
                         }
                     }
@@ -92,15 +92,15 @@ namespace BarberBot
                 {
                     nextRequest = new AppointmentRequest(Shop);
                     nextRequest.CopyFrom(this);
-                    if (nextRequest.RequestedDateTime < nowDateTime)
+                    if (nextRequest.StartDateTime < nowDateTime)
                     {
                         int attempts = 0;
-                        nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
-                        RequestedBarber.Hours.Load(RequestedBarber, nextRequest.RequestedDateTime);
-                        while (!Shop.IsOpen(nextRequest.RequestedDateTime) && !RequestedBarber.Hours.IsWithinHours(nextRequest.RequestedDateTime) && attempts < 5)
+                        nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
+                        RequestedBarber.Hours.Load(RequestedBarber, nextRequest.StartDateTime);
+                        while (!Shop.IsOpen(nextRequest.StartDateTime) && !RequestedBarber.Hours.IsWithinHours(nextRequest.StartDateTime) && attempts < 5)
                         {
-                            nextRequest.RequestedDateTime = nextRequest.RequestedDateTime.AddDays(1);
-                            nextRequest.RequestedDateTime = Shop.OpeningDateTime(nextRequest.RequestedDateTime);
+                            nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
+                            nextRequest.StartDateTime = Shop.OpeningDateTime(nextRequest.StartDateTime);
                             attempts++;
                         }
                     }
@@ -115,13 +115,13 @@ namespace BarberBot
 
         public void ResetDateTime()
         {
-            RequestedDateTime = DateTime.MinValue;
+            StartDateTime = DateTime.MinValue;
         }
 
         public string ToSuggestionString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendFormat("{2} {0:m} at {0:t} with {1}", RequestedDateTime, RequestedBarber.DisplayName, RequestedDateTime.ToString("ddd"));
+            builder.AppendFormat("{2} {0:m} at {0:t} with {1}", StartDateTime, RequestedBarber.DisplayName, StartDateTime.ToString("ddd"));
             return builder.ToString();
         }
 
@@ -161,7 +161,7 @@ namespace BarberBot
         public void CopyFrom(AppointmentRequest suggestedAppointmentRequest)
         {
             Shop = suggestedAppointmentRequest.Shop;
-            RequestedDateTime = suggestedAppointmentRequest.RequestedDateTime;
+            StartDateTime = suggestedAppointmentRequest.StartDateTime;
             RequestedBarber = suggestedAppointmentRequest.RequestedBarber;
         }
     }

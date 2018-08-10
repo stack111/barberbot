@@ -70,10 +70,10 @@ namespace BarberBot.Models
             {
                 var appointmentRequest = await result;
 
-                if (appointmentRequest.RequestedDateTime != DateTime.MinValue)
+                if (appointmentRequest.StartDateTime != DateTime.MinValue)
                 {
                     var promptTodayConfirmation = new PromptDialog.PromptConfirm(
-                               $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} on {string.Format("{0} {1:m} at {1:t}", appointmentRequest.RequestedDateTime.ToString("ddd"), appointmentRequest.RequestedDateTime)}?",
+                               $"Can you confirm your appointment with {appointmentRequest.RequestedBarber} on {string.Format("{0} {1:m} at {1:t}", appointmentRequest.StartDateTime.ToString("ddd"), appointmentRequest.StartDateTime)}?",
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
                     request.CopyFrom(appointmentRequest);

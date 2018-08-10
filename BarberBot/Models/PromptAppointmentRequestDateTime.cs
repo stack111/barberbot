@@ -82,7 +82,7 @@
                     if (modelResult["type"] == "time")
                     {
                         var parsedTime = DateTime.Parse(modelResult["value"]);
-                        request.RequestedDateTime = parsedTime;
+                        request.StartDateTime = parsedTime;
                         timeValue = parsedTime.ToShortTimeString();
                         var response = await request.IsAvailableAsync();
 
@@ -129,7 +129,7 @@
                         }
 
                         timeValue = parsedTime.ToShortTimeString();
-                        request.RequestedDateTime = parsedTime;
+                        request.StartDateTime = parsedTime;
                         var response = await request.IsAvailableAsync();
 
                         if (response.IsAvailable)
@@ -162,7 +162,7 @@
                             parsedDate = fix.SafeCreateFromValue(PSTDate.Year, fix.Month, fix.Day);
                         }
 
-                        request.RequestedDateTime = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, PSTDateTime.Hour, PSTDateTime.Minute, 0, DateTimeKind.Local);
+                        request.StartDateTime = new DateTime(parsedDate.Year, parsedDate.Month, parsedDate.Day, PSTDateTime.Hour, PSTDateTime.Minute, 0, DateTimeKind.Local);
                         var response = await request.IsAvailableAsync();
                         if (response.IsAvailable)
                         {
@@ -241,7 +241,7 @@
                 DateTime timeInstance = DateTime.Parse(timeValue);
                 todayDate = new DateTime(todayDate.Year, todayDate.Month, todayDate.Day, timeInstance.Hour, timeInstance.Minute, 0, DateTimeKind.Local);
                 
-                request.RequestedDateTime = todayDate;
+                request.StartDateTime = todayDate;
                 await context.PostAsync("Ok", context.Activity.AsMessageActivity().Locale);
                 suggestionAttemptCounter = 0;
                 context.Done(request);
