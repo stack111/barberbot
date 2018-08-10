@@ -29,7 +29,7 @@ namespace BarberBot.Models
                 this.OnBarberChoiceSelected,
                 request.Shop.LoadBarbers(true),
                 "Ok, can you tell me who's your barber?",
-                "I'm sorry but I didn't understand that. can you select one of the barber options below?",
+                "I'm sorry but I didn't understand that. can you select one of the options below?",
                 2, PromptStyle.Auto);
 
         }
@@ -46,10 +46,50 @@ namespace BarberBot.Models
                     // suggest a good window of time and day.
                     // todo make this a real suggestion based on calendar.
                     this.request.RequestedBarber = barber;
+
+                    PromptDialog.Choice(
+                        context,
+                        this.OnServiceChoiceSelected,
+                        await request.RequestedBarber.LoadServicesAsync(),
+                        "Ok can you choose what kind of barber service you need?",
+                        "I'm sorry but I didn't understand that. can you select one of the options below?",
+                        2, PromptStyle.Auto);
+                }
+                else
+                {
+                    context.Done(false);
+                }
+            }
+            catch (TooManyAttemptsException)
+            {
+                context.Done(false);
+            }
+        }
+
+        private async Task OnServiceChoiceSelected(IDialogContext context, IAwaitable<BarberService> result)
+        {
+            try
+            {
+                var service = await result;
+
+                if (service != null)
+                {
+                    // retrieve barber schedule and the next available window and barbers in that window
+                    // suggest a good window of time and day.
+                    // todo make this a real suggestion based on calendar.
+                    request.Service = service;
+                    await context.PostAsync($"You choose: {service.ToDescriptionString()}");
+                    
+                    // not sure we need to confirm this.
+                    //PromptDialog.Confirm(context, OnServiceConfirmation, 
+                    //    $"Can you please confirm {service} as your choice?",
+                    //    "Sorry I didn't understand you. Can you choose an option below?",
+                    //    2);
+
                     var promptAppointmentDateTime = new PromptAppointmentRequestDateTime(request,
-                        $"Ok can you tell me a date and time you would prefer for your appointment with {barber.DisplayName}?",
-                        retry: "You have tried to request an appointment too many times, try again briefly.",
-                        attempts: 3);
+                       $"Ok can you tell me a date and time you would prefer for your appointment with {request.RequestedBarber}?",
+                       retry: "You have tried to request an appointment too many times, try again briefly.",
+                       attempts: 3);
 
                     context.Call(promptAppointmentDateTime, this.AfterAppointmentDateTimeChoosen);
                 }
@@ -57,6 +97,30 @@ namespace BarberBot.Models
                 {
                     context.Done(false);
                 }
+            }
+            catch (TooManyAttemptsException)
+            {
+                context.Done(false);
+            }
+        }
+
+        private async Task OnServiceConfirmation(IDialogContext context, IAwaitable<bool> result)
+        {
+            try
+            {
+                var confirm = await result;
+
+                if (!confirm)
+                {
+                    request.Service = null;
+                    context.Done(false);
+                    return;
+                }
+                // retrieve barber schedule and the next available window and barbers in that window
+                // suggest a good window of time and day.
+                // todo make this a real suggestion based on calendar.
+                
+               
             }
             catch (TooManyAttemptsException)
             {

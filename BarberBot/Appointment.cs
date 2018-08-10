@@ -11,7 +11,15 @@ namespace BarberBot
         public Shop Shop { get; private set; }
         public Barber Barber { get; private set; }
         public DateTime StartDateTime { get; private set; }
+        public BarberService Service { get; set; }
 
+        public DateTime EndDateTime
+        {
+            get
+            {
+                return StartDateTime.Add(Service.Duration);
+            }
+        }
         public Appointment(IRepository<Appointment> repository)
         {
             this.repository = repository;
@@ -22,6 +30,7 @@ namespace BarberBot
             Shop = request.Shop;
             Barber = request.RequestedBarber;
             StartDateTime = request.StartDateTime;
+            Service = request.Service;
         }
 
         public async Task BookAsync()

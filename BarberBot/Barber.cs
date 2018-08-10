@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BarberBot
@@ -23,6 +24,31 @@ namespace BarberBot
 
         public BarberHours Hours { get; internal set; }
 
+        public async Task<List<BarberService>> LoadServicesAsync()
+        {
+            return new List<BarberService>()
+            {
+                new BarberService()
+                {
+                    DisplayName = "Buzz Cut",
+                    Duration = TimeSpan.FromMinutes(15),
+                    Description = "Trimmer for hair, no scissors or shears or special services."
+                },
+                new BarberService()
+                {
+                    DisplayName = "Short Hair Cut",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Description = "Shears, scissors, trimmers, or anything needed to get the hair you want."
+                },
+                new BarberService()
+                {
+                    DisplayName = "Long Hair Cut",
+                    Duration = TimeSpan.FromMinutes(40),
+                    Description = "Maybe you want a steamed towel or other extras. This includes anything needed to get the hair you want."
+                }
+            };
+        }
+
         public async Task<BarberAvailabilityResponse> IsAvailableAsync(AppointmentRequest appointmentRequest)
         {
             if (string.Equals(DisplayName, "Anyone", StringComparison.OrdinalIgnoreCase))
@@ -32,11 +58,14 @@ namespace BarberBot
 
             // check working days / hours
             // check if already reserved
-            bool available = await hoursRepository.IsAvailableAsync(this, appointmentRequest.StartDateTime);
+            bool startTimeAvailable = await hoursRepository.IsAvailableAsync(this, appointmentRequest.StartDateTime);
+
+            DateTime durationTime = appointmentRequest.StartDateTime.Add(appointmentRequest.Service.Duration);
+            bool durationAvailable = await hoursRepository.IsAvailableAsync(this, durationTime);
             Appointment appointment = new Appointment(appointmentRepository);
             appointment.CopyFrom(appointmentRequest);
             bool conflictingAppointment = await appointment.ExistsAsync();
-            bool barberAvailability = Hours.Exists && available && !conflictingAppointment;
+            bool barberAvailability = Hours.Exists && startTimeAvailable && !conflictingAppointment;
             bool withinHours = Hours.IsWithinHours(appointmentRequest.StartDateTime);
             // if not available get next available barber
             BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse()

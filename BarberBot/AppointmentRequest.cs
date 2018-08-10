@@ -23,6 +23,8 @@ namespace BarberBot
 
         public Shop Shop { get; private set; }
 
+        public BarberService Service { get; internal set; }
+
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync()
         {
             StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime);
@@ -37,7 +39,6 @@ namespace BarberBot
 
             if (shopResponse.IsAvailable && barberResponse.IsAvailable)
             {
-                
                 return new AppointmentAvailabilityResponse()
                 {
                     IsAvailable = true,
@@ -163,6 +164,7 @@ namespace BarberBot
             Shop = suggestedAppointmentRequest.Shop;
             StartDateTime = suggestedAppointmentRequest.StartDateTime;
             RequestedBarber = suggestedAppointmentRequest.RequestedBarber;
+            Service = suggestedAppointmentRequest.Service;
         }
     }
 }

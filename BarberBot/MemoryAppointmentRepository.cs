@@ -20,16 +20,9 @@ namespace BarberBot
 
         public Task<bool> ExistsAsync(Appointment instance)
         {
-            // todo filter by shop
-            if (BookedAppointments.ContainsKey(instance.StartDateTime))
-            {
-                List<Appointment> appointments = BookedAppointments[instance.StartDateTime];
-                return Task.FromResult(appointments.Any(appointment => string.Equals(instance.Barber.DisplayName, appointment.Barber.DisplayName, StringComparison.OrdinalIgnoreCase)));
-            }
-            else
-            {
-                return Task.FromResult(false);
-            }
+            var existingKeyValuePairs = BookedAppointments.Where(appt => appt.Key >= instance.StartDateTime && appt.Key < instance.EndDateTime && appt.Value != null && appt.Value.Any(b => string.Equals(b.Barber.DisplayName, instance.Barber.DisplayName, StringComparison.OrdinalIgnoreCase)));
+
+            return Task.FromResult(existingKeyValuePairs != null && existingKeyValuePairs.Any());
         }
 
         public Task SaveAsync(Appointment instance)

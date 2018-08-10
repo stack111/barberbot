@@ -392,6 +392,7 @@
     <Compile Include="Barber.cs" />
     <Compile Include="BarberAvailabilityResponse.cs" />
     <Compile Include="BarberHours.cs" />
+    <Compile Include="BarberService.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
