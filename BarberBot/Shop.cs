@@ -5,30 +5,34 @@ using System.Threading.Tasks;
 namespace BarberBot
 {
     [Serializable]
-    public class Shop
+    public class Shop : ISchedulable
     {
         private readonly TimeSpan minimumTimeBeforeClose;
-        private readonly IHoursRepository<Barber> barberRepository;
         private readonly IRepository<Appointment> appointmentRepository;
-        private StoreHours Hours;
+        private readonly IBarbersRepository barbersRepository;
+        private readonly ShopHours Hours;
+        public List<Barber> Barbers { get; set; }
+        public HoursType Type => HoursType.Shop;
 
-        public Shop(IHoursRepository<Barber> barberRepository, IRepository<Appointment> appointmentRepository)
+        public Shop(IRepository<Appointment> appointmentRepository, ShopHours hours, IBarbersRepository barbersRepository)
         {
-            Hours = new StoreHours();
-            minimumTimeBeforeClose = StoreHours.AppointmentMiddleLength;
-            this.barberRepository = barberRepository;
+            Hours = hours;
+            minimumTimeBeforeClose = ShopHours.AppointmentMiddleLength;
             this.appointmentRepository = appointmentRepository;
+            this.barbersRepository = barbersRepository;
+            Barbers = new List<Barber>();
         }
 
-        public bool CanAcceptCustomers(DateTime dateTime)
+        public async Task<bool> CanAcceptCustomersAsync(DateTime dateTime)
         {
-            if (!IsOpen(dateTime))
+            if (!await IsOpenAsync(dateTime))
             {
                 return false;
             }
-            DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours);
-            StoreHours nowHours = new StoreHours();
-            nowHours.Load(this, nowDateTime);
+
+            DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours);
+            ShopHours nowHours = new ShopHours(Hours);
+            await nowHours.LoadAsync(this, nowDateTime);
             if (dateTime < nowDateTime)
             {
                 return false;
@@ -36,25 +40,21 @@ namespace BarberBot
             return true;
         }
 
-        public DateTime OpeningDateTime(DateTime dateTime)
+        public async Task<DateTime> OpeningDateTimeAsync(DateTime dateTime)
         {
-            StoreHours hours = new StoreHours();
-            hours.Load(this, dateTime);
-            return hours.OpeningDateTime();
+            await Hours.LoadAsync(this, dateTime);
+            return Hours.OpeningDateTime();
         }
 
-        public DateTime ClosingDateTime(DateTime dateTime)
+        public async Task<DateTime> ClosingDateTimeAsync(DateTime dateTime)
         {
-            StoreHours hours = new StoreHours();
-            hours.Load(this, dateTime);
-            return hours.ClosingDateTime();
+            await Hours.LoadAsync(this, dateTime);
+            return Hours.ClosingDateTime();
         }
 
-        public bool IsOpen(DateTime dateTime)
-        {
-            // todo: special case check for holidays           
-            
-            Hours.Load(this, dateTime);
+        public async Task<bool> IsOpenAsync(DateTime dateTime)
+        {          
+            await Hours.LoadAsync(this, dateTime);
             if (!Hours.Exists)
             {
                 return false;
@@ -68,8 +68,8 @@ namespace BarberBot
             AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse();
             var dateTimeToCheck = appointmentRequest.StartDateTime.Add(minimumTimeBeforeClose);
 
-            DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours); // convert to PST.
-            Hours.Load(this, nowDateTime.Date); // today's hours
+            DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours); // convert to PST.
+            await Hours.LoadAsync(this, nowDateTime.Date); // today's hours
 
             // check holidays
 
@@ -84,7 +84,7 @@ namespace BarberBot
             }
 
             // is the store open?
-            Hours.Load(this, dateTimeToCheck);
+            await Hours.LoadAsync(this, dateTimeToCheck);
             if (!Hours.Exists)
             {
                 response.ValidationResults.Add(new ValidationResult()
@@ -108,14 +108,14 @@ namespace BarberBot
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = $"The appointment isn't between store hours of {FormattedDayHours(appointmentRequest.StartDateTime)}. "
+                    Message = $"The appointment isn't between store hours of {Hours.FormattedDayHours()}. "
                 });
             }
             else if(!meetsMinimum)
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = $"The appointment needs to be at least {minimumTimeBeforeClose} minutes before closing. Hours are {FormattedDayHours(appointmentRequest.StartDateTime)}. "
+                    Message = $"The appointment needs to be at least {minimumTimeBeforeClose} minutes before closing. Hours are {Hours.FormattedDayHours()}. "
                 });
             }
             return response;
@@ -123,7 +123,7 @@ namespace BarberBot
 
         public async Task<BarberAvailabilityResponse> AnyBarbersAvailableAsync(AppointmentRequest appointmentRequest)
         {
-            var barbers = LoadBarbers(false);
+            var barbers = await LoadBarbersAsync(false);
             BarberAvailabilityResponse availabilityResponse = null;
             foreach (var barber in barbers)
             {
@@ -143,7 +143,7 @@ namespace BarberBot
 
         public async Task<AppointmentRequest> NextAvailableBarberAsync(AppointmentRequest appointmentRequest)
         {
-            var barbers = LoadBarbers(false);
+            var barbers = await LoadBarbersAsync(false);
 
             Barber nextAvailable = null;
             AppointmentRequest nextRequest = new AppointmentRequest(this);
@@ -165,48 +165,47 @@ namespace BarberBot
                 if (nextAvailable == null)
                 {
                     DateTime nextDateTimeCheck = nextRequest.StartDateTime.Add(BarberHours.AppointmentMiddleLength);
-                    if (!IsOpen(nextDateTimeCheck))
+                    if (!await IsOpenAsync(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
-                        Hours.Load(this, nextDateTimeCheck);
+                        await Hours.LoadAsync(this, nextDateTimeCheck);
                         nextDateTimeCheck = Hours.OpeningDateTime();
                     }
-                    nextRequest = new AppointmentRequest(this)
-                    {
-                        RequestedBarber = nextRequest.RequestedBarber,
-                        StartDateTime = nextDateTimeCheck,
-                    };
+                    nextRequest = new AppointmentRequest(this);
+                    nextRequest.CopyFrom(appointmentRequest); 
                     attempts++;
                 }
             }
 
-            nextRequest.RequestedBarber = nextAvailable;
+            if(nextAvailable == null)
+            {
+                // if we can't find a barber this is not a valid request.
+                nextRequest = null;
+            }
+            else
+            {
+                nextRequest.RequestedBarber = nextAvailable;
+            }
 
             return nextRequest;
         }
-        public string FormattedWeekHours(DateTime dateTime)
+
+        public async Task<string> FormattedWeekHoursAsync(DateTime dateTime)
         {
-            Hours.Load(this, dateTime);
+            await Hours.LoadAsync(this, dateTime);
             return Hours.FormattedWeekHours();
         }
 
-        public string FormattedDayHours(DateTime dateTime)
+        public async Task<List<Barber>> LoadBarbersAsync(bool withAnyone)
         {
-            Hours.Load(this, dateTime);
-            return Hours.FormattedDayHours();
+            await barbersRepository.LoadAsync(this, withAnyone);
+            return new List<Barber>(Barbers);
         }
 
-        public List<Barber> LoadBarbers(bool withAnyone)
+        public void LoadFrom(Hours<ISchedulable> hours)
         {
-            List<Barber> barbers = new List<Barber>()
-            {
-                new Barber(this, barberRepository, appointmentRepository) { DisplayName = "Jessica" }
-            };
-            if (withAnyone)
-            {
-                barbers.Add(new Barber(this, barberRepository, appointmentRepository) { DisplayName = "Anyone" });
-            }
-            return barbers;
+            Hours.ClosingHour = hours.ClosingHour;
+            Hours.OpeningHour = hours.OpeningHour;
         }
     }
 }

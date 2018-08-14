@@ -27,7 +27,7 @@ namespace BarberBot.Models
              PromptDialog.Choice(
                 context,
                 this.OnBarberChoiceSelected,
-                request.Shop.LoadBarbers(true),
+                await request.Shop.LoadBarbersAsync(true),
                 "Ok, can you tell me who's your barber?",
                 "I'm sorry but I didn't understand that. can you select one of the options below?",
                 2, PromptStyle.Auto);

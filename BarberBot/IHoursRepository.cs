@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 
 namespace BarberBot
 {
-    public interface IHoursRepository<T>
+    public interface IHoursRepository
     {
-        Task<bool> IsAvailableAsync(T instance, DateTime dateTime);
+        Task LoadAsync<T>(Hours<T> hours, DateTime dateTime) where T : ISchedulable;
     }
 }

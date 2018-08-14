@@ -23,7 +23,7 @@ namespace BarberBot
 
         public Shop Shop { get; private set; }
 
-        public BarberService Service { get; internal set; }
+        public BarberService Service { get; set; }
 
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync()
         {
@@ -65,7 +65,7 @@ namespace BarberBot
             {
                 // shop is not available
                 // show the hours for the week and suggest the next available appointment
-                DateTime nowDateTime = DateTime.UtcNow.AddHours(StoreHours.UTC_to_PST_Hours);
+                DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours);
                 AppointmentRequest nextRequest = null;
                 AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse()
                 {
@@ -79,10 +79,10 @@ namespace BarberBot
                     if (nextRequest.StartDateTime < nowDateTime)
                     {
                         int attempts = 0;
-                        while (!Shop.CanAcceptCustomers(nextRequest.StartDateTime) && attempts < 5)
+                        while (!await Shop.CanAcceptCustomersAsync(nextRequest.StartDateTime) && attempts < 5)
                         {
                             nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
-                            nextRequest.StartDateTime = Shop.OpeningDateTime(nextRequest.StartDateTime);
+                            nextRequest.StartDateTime = await Shop.OpeningDateTimeAsync(nextRequest.StartDateTime);
                             attempts++;
                         }
                     }
@@ -97,11 +97,11 @@ namespace BarberBot
                     {
                         int attempts = 0;
                         nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
-                        RequestedBarber.Hours.Load(RequestedBarber, nextRequest.StartDateTime);
-                        while (!Shop.IsOpen(nextRequest.StartDateTime) && !RequestedBarber.Hours.IsWithinHours(nextRequest.StartDateTime) && attempts < 5)
+                        await RequestedBarber.Hours.LoadAsync(RequestedBarber, nextRequest.StartDateTime);
+                        while (!await Shop.IsOpenAsync(nextRequest.StartDateTime) && !RequestedBarber.Hours.IsWithinHours(nextRequest.StartDateTime) && attempts < 5)
                         {
                             nextRequest.StartDateTime = nextRequest.StartDateTime.AddDays(1);
-                            nextRequest.StartDateTime = Shop.OpeningDateTime(nextRequest.StartDateTime);
+                            nextRequest.StartDateTime = await Shop.OpeningDateTimeAsync(nextRequest.StartDateTime);
                             attempts++;
                         }
                     }

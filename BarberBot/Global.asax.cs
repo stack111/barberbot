@@ -20,10 +20,15 @@ namespace BarberBot
             var containerBuilder = new ContainerBuilder();
             var config = GlobalConfiguration.Configuration;
             containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            containerBuilder.Register<IHoursRepository>(f => new MemoryHoursRepository());
+            containerBuilder.Register<IBarbersRepository>(f => new MemoryBarbersRepository(
+                f.Resolve<IRepository<Appointment>>(),
+                f.Resolve<IHoursRepository>()));
+            
+            containerBuilder.Register(f => new ShopHours(f.Resolve<IHoursRepository>()));
+            containerBuilder.Register(f => new BarberHours(f.Resolve<IHoursRepository>()));
             containerBuilder.Register<IRepository<Appointment>>(f => new MemoryAppointmentRepository());
             containerBuilder.Register(f => new Appointment(f.Resolve<IRepository<Appointment>>()));
-            containerBuilder.Register<IHoursRepository<Barber>>(f => 
-            new MemoryBarberHoursRepository(f.Resolve<IRepository<Appointment>>()));
             containerBuilder.RegisterType<Shop>();
 
 

@@ -7,22 +7,24 @@ namespace BarberBot
 {
     [Serializable]
     [JsonObject]
-    public class Barber
+    public class Barber : ISchedulable
     {
         private readonly Shop shop;
-        private readonly IHoursRepository<Barber> hoursRepository;
         private readonly IRepository<Appointment> appointmentRepository;
-        public Barber(Shop shop, IHoursRepository<Barber> hoursRespository, IRepository<Appointment> appointmentRepository)
+
+        public Barber(Shop shop, IRepository<Appointment> appointmentRepository, BarberHours hours)
         {
             this.shop = shop;
-            this.hoursRepository = hoursRespository;
             this.appointmentRepository = appointmentRepository;
+            Hours = hours;
         }
 
         [JsonProperty(PropertyName = "displayName")]
         public string DisplayName { get; set; }
 
-        public BarberHours Hours { get; internal set; }
+        public BarberHours Hours { get; private set; }
+
+        public HoursType Type => HoursType.Barber;
 
         public async Task<List<BarberService>> LoadServicesAsync()
         {
@@ -58,10 +60,11 @@ namespace BarberBot
 
             // check working days / hours
             // check if already reserved
-            bool startTimeAvailable = await hoursRepository.IsAvailableAsync(this, appointmentRequest.StartDateTime);
+            await Hours.LoadAsync(this, appointmentRequest.StartDateTime);
+            bool startTimeAvailable = await Hours.IsAvailableAsync(appointmentRequest.StartDateTime);
 
             DateTime durationTime = appointmentRequest.StartDateTime.Add(appointmentRequest.Service.Duration);
-            bool durationAvailable = await hoursRepository.IsAvailableAsync(this, durationTime);
+            bool durationAvailable = await Hours.IsAvailableAsync(durationTime);
             Appointment appointment = new Appointment(appointmentRepository);
             appointment.CopyFrom(appointmentRequest);
             bool conflictingAppointment = await appointment.ExistsAsync();
@@ -108,10 +111,10 @@ namespace BarberBot
                 while (!availableResponse.IsAvailable && attempts < 5)
                 {
                     nextDateTimeCheck = suggestedAppointment.StartDateTime.Add(BarberHours.AppointmentMiddleLength);
-                    if (!shop.IsOpen(nextDateTimeCheck))
+                    if (!await shop.IsOpenAsync(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
-                        nextDateTimeCheck = shop.OpeningDateTime(nextDateTimeCheck);
+                        nextDateTimeCheck = await shop.OpeningDateTimeAsync(nextDateTimeCheck);
                     }
 
                     suggestedAppointment.StartDateTime = nextDateTimeCheck;
@@ -151,6 +154,12 @@ namespace BarberBot
         public override int GetHashCode()
         {
             return DisplayName.GetHashCode();
+        }
+
+        public void LoadFrom(Hours<ISchedulable> hours)
+        {
+            Hours.ClosingHour = hours.ClosingHour;
+            Hours.OpeningHour = hours.OpeningHour;
         }
     }
 }

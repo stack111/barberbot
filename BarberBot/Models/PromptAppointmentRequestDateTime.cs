@@ -174,13 +174,21 @@
                         }
                         else
                         {
-                            await context.PostAsync($"I looked at {request.ToSuggestionString()}", context.Activity.AsMessageActivity().Locale);
-                            suggestedAppointmentRequest = response.SuggestedRequest;
-                            var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
+                            if(response.SuggestedRequest == null)
+                            {
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, but I couldn't find a suggested appointment. Can you try again and tell me both date and time?", context.Activity.AsMessageActivity().Locale);
+                            }
+                            else
+                            {
+                                suggestedAppointmentRequest = response.SuggestedRequest;
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}", context.Activity.AsMessageActivity().Locale);
+                                var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
                                response.FormattedValidationMessage().Replace("Sorry", "But sorry"),
                                "Sorry I didn't understand you. Can you choose an option below?",
                                2);
-                            context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                                context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                            }
+                            
                         }
                     }
                     else

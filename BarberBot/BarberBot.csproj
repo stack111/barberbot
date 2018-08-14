@@ -398,16 +398,20 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Hours.cs" />
+    <Compile Include="IBarbersRepository.cs" />
+    <Compile Include="MemoryBarbersRepository.cs" />
+    <Compile Include="MemoryHoursRepository.cs" />
+    <Compile Include="HoursType.cs" />
     <Compile Include="IHoursRepository.cs" />
     <Compile Include="IRepository.cs" />
+    <Compile Include="ISchedulable.cs" />
     <Compile Include="MemoryAppointmentRepository.cs" />
-    <Compile Include="MemoryBarberHoursRepository.cs" />
     <Compile Include="Models\AppointmentRequestDialog.cs" />
     <Compile Include="Models\PromptAppointmentRequestDateTime.cs" />
     <Compile Include="Models\RootDialog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shop.cs" />
-    <Compile Include="StoreHours.cs" />
+    <Compile Include="ShopHours.cs" />
     <Compile Include="ValidationResult.cs" />
   </ItemGroup>
   <ItemGroup>
