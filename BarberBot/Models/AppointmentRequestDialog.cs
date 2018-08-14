@@ -78,7 +78,7 @@ namespace BarberBot.Models
                     // suggest a good window of time and day.
                     // todo make this a real suggestion based on calendar.
                     request.Service = service;
-                    await context.PostAsync($"You chose: {service.ToDescriptionString()}");
+                    await context.PostAsync(service.ToDescriptionString());
                     
                     // not sure we need to confirm this.
                     //PromptDialog.Confirm(context, OnServiceConfirmation, 

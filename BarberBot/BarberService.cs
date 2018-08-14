@@ -11,7 +11,7 @@ namespace BarberBot
 
         public string ToDescriptionString()
         {
-            return $"{ToString()}/r/nDescription: {Description}";
+            return $"{ToString()}\r\nDescription: {Description}";
         }
 
         public override string ToString()
