@@ -7,7 +7,7 @@ using System.Web;
 namespace BarberBot
 {
     [Serializable]
-    public class ShopHours : Hours<Shop>
+    public class ShopHours : Hours<IShop>
     {
         private DateTime dateTime = DateTime.MinValue;
 
@@ -15,7 +15,7 @@ namespace BarberBot
         {
         }
 
-        public ShopHours(Hours<Shop> hours) : base(hours)
+        public ShopHours(Hours<IShop> hours) : base(hours)
         {
         }
 

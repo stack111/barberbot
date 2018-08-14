@@ -176,7 +176,7 @@
                         {
                             if(response.SuggestedRequest == null)
                             {
-                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, but I couldn't find a suggested appointment. Can you try again and tell me both date and time?", context.Activity.AsMessageActivity().Locale);
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, but I couldn't give you a suggested appointment. Can you suggest both date and time which would work for you?", context.Activity.AsMessageActivity().Locale);
                             }
                             else
                             {

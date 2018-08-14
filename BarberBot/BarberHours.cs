@@ -3,13 +3,13 @@
 namespace BarberBot
 {
     [Serializable]
-    public class BarberHours : Hours<Barber>
+    public class BarberHours : Hours<IBarber>
     {
         public BarberHours(IHoursRepository hoursRepository) : base(hoursRepository)
         {
         }
 
-        public BarberHours(Hours<Barber> hours) : base(hours)
+        public BarberHours(Hours<IBarber> hours) : base(hours)
         {
         }
 

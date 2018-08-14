@@ -7,7 +7,7 @@ namespace BarberBot
 {
     [Serializable]
     [JsonObject]
-    public class Barber : ISchedulable
+    public class Barber : IBarber
     {
         private readonly Shop shop;
         private readonly IRepository<Appointment> appointmentRepository;
@@ -60,11 +60,10 @@ namespace BarberBot
 
             // check working days / hours
             // check if already reserved
-            await Hours.LoadAsync(this, appointmentRequest.StartDateTime);
-            bool startTimeAvailable = await Hours.IsAvailableAsync(appointmentRequest.StartDateTime);
+            bool startTimeAvailable = await Hours.IsAvailableAsync(this, appointmentRequest.StartDateTime);
 
             DateTime durationTime = appointmentRequest.StartDateTime.Add(appointmentRequest.Service.Duration);
-            bool durationAvailable = await Hours.IsAvailableAsync(durationTime);
+            bool durationAvailable = await Hours.IsAvailableAsync(this, durationTime);
             Appointment appointment = new Appointment(appointmentRepository);
             appointment.CopyFrom(appointmentRequest);
             bool conflictingAppointment = await appointment.ExistsAsync();

@@ -34,9 +34,9 @@ namespace BarberBot
             }
         }
 
-        public async Task<bool> IsAvailableAsync(DateTime dateTime)
+        public async Task<bool> IsAvailableAsync(T instance, DateTime dateTime)
         {
-            await LoadAsync(Instance, dateTime);
+            await LoadAsync(instance, dateTime);
             return Exists && IsWithinHours(dateTime);
         }
 

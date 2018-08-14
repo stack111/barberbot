@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace BarberBot.Tests
 {
-    [TestClass]
     public class AppointmentRequestTests
     {
-        AppointmentRequest request;
-        Barber initialBarber;
 
-        [TestInitialize]
-        public void Init()
+        [Fact]
+        public async Task AppointmentRequest_IsAvaiableNowJessica_True()
         {
             var hoursRepository = new MemoryHoursRepository();
             var appointmentRepository = new MemoryAppointmentRepository();
@@ -19,14 +16,9 @@ namespace BarberBot.Tests
             var storeHours = new ShopHours(hoursRepository);
             var barberHours = new BarberHours(hoursRepository);
             Shop shop = new Shop(appointmentRepository, storeHours, barbersRepository);
-            request = new AppointmentRequest(shop);
-            initialBarber = new Barber(shop, appointmentRepository, barberHours);
-        }
+            AppointmentRequest request = new AppointmentRequest(shop);
+            Barber initialBarber = new Barber(shop, appointmentRepository, barberHours);
 
-        [TestMethod]
-        [TestCategory("L1")]
-        public async Task AppointmentRequest_IsAvaiableNowJessica_True()
-        {
             request.StartDateTime = DateTime.Now;
             initialBarber.DisplayName = "Jessica";
             request.RequestedBarber = initialBarber;
@@ -34,7 +26,7 @@ namespace BarberBot.Tests
 
             AppointmentAvailabilityResponse response = await request.IsAvailableAsync();
 
-            Assert.IsTrue(response.IsAvailable, $"{initialBarber.DisplayName} should be availabe on {request.StartDateTime}");
+            Assert.True(response.IsAvailable, $"{initialBarber.DisplayName} should be availabe on {request.StartDateTime}");
         }
     }
 }

@@ -398,7 +398,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Hours.cs" />
+    <Compile Include="IBarber.cs" />
     <Compile Include="IBarbersRepository.cs" />
+    <Compile Include="IShop.cs" />
     <Compile Include="MemoryBarbersRepository.cs" />
     <Compile Include="MemoryHoursRepository.cs" />
     <Compile Include="HoursType.cs" />

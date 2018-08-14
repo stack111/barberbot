@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace BarberBot
 {
     [Serializable]
-    public class Shop : ISchedulable
+    public class Shop : IShop
     {
         private readonly TimeSpan minimumTimeBeforeClose;
         private readonly IRepository<Appointment> appointmentRepository;
@@ -53,14 +53,8 @@ namespace BarberBot
         }
 
         public async Task<bool> IsOpenAsync(DateTime dateTime)
-        {          
-            await Hours.LoadAsync(this, dateTime);
-            if (!Hours.Exists)
-            {
-                return false;
-            }
-
-            return Hours.IsWithinHours(dateTime);
+        {   
+            return await Hours.IsAvailableAsync(this, dateTime);
         }
 
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync(AppointmentRequest appointmentRequest)
@@ -89,7 +83,7 @@ namespace BarberBot
             {
                 response.ValidationResults.Add(new ValidationResult()
                 {
-                    Message = "The store isn't open that day. "
+                    Message = "The shop isn't open that day. "
                 });
                 return response;
             }

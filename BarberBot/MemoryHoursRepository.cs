@@ -22,12 +22,6 @@ namespace BarberBot
             };
         }
 
-        public async Task<bool> IsAvailableAsync(Barber instance, DateTime dateTime)
-        {
-            await LoadAsync(instance.Hours, dateTime);
-            return instance.Hours.Exists && instance.Hours.IsWithinHours(dateTime);
-        }
-
         public Task LoadAsync<T>(Hours<T> hours, DateTime dateTime) where T : ISchedulable
         {
             switch (hours.Instance.Type)
