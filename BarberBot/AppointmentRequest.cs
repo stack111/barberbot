@@ -27,8 +27,16 @@ namespace BarberBot
 
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync()
         {
+            DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours);
             StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime);
-            
+            TimeSpan difference = nowDateTime - StartDateTime;
+
+            // we need to adjust the rounding for any rounding to a few minutes in the past.
+            while (StartDateTime < nowDateTime && difference < TimeSpan.FromMinutes(1))
+            {
+                StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime.AddMinutes(5));
+            }
+
             var shopResponse = await Shop.IsAvailableAsync(this);
             BarberAvailabilityResponse barberResponse = await RequestedBarber.IsAvailableAsync(this);
             if (RequestedBarber != barberResponse.Barber)
@@ -65,7 +73,7 @@ namespace BarberBot
             {
                 // shop is not available
                 // show the hours for the week and suggest the next available appointment
-                DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours);
+                
                 AppointmentRequest nextRequest = null;
                 AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse()
                 {
@@ -132,21 +140,76 @@ namespace BarberBot
             int hour = requestedTime.Hour;
             int minute = requestedTime.Minute;
             roundedRequestedDateTime = true;
-            if (requestedTime.Minute > 0 && requestedTime.Minute <= 15)
+            if (requestedTime.Minute > 0 && requestedTime.Minute <= 5)
             {
                 newProposedTime = newProposedTime.AddMinutes(-1 * minute);
             }
-            else if (requestedTime.Minute > 15 && requestedTime.Minute <= 29)
+            else if (requestedTime.Minute > 5 && requestedTime.Minute <= 9)
+            {
+                var roundMark = 10 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 10 && requestedTime.Minute <= 13)
+            {
+                var roundMark = 10 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 13 && requestedTime.Minute <= 14)
+            {
+                var roundMark = 15 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 15 && requestedTime.Minute <= 17)
+            {
+                var roundMark = 15 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 17 && requestedTime.Minute < 20)
+            {
+                var roundMark = 20 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 20 && requestedTime.Minute <= 25)
+            {
+                var roundMark = 20 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 25 && requestedTime.Minute <= 29)
             {
                 var roundMark = 30 - minute;
                 newProposedTime = newProposedTime.AddMinutes(roundMark);
             }
-            else if (requestedTime.Minute >= 31 && requestedTime.Minute <= 45)
+            else if (requestedTime.Minute >= 31 && requestedTime.Minute <= 35)
             {
-                var roundMark = minute - 30;
-                newProposedTime = newProposedTime.AddMinutes(-1 * roundMark);
+                var roundMark = 30 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
             }
-            else if (requestedTime.Minute > 45 && requestedTime.Minute <= 59)
+            else if (requestedTime.Minute > 35 && requestedTime.Minute <= 39)
+            {
+                var roundMark = 40 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute >= 41 && requestedTime.Minute <= 43)
+            {
+                var roundMark = 40 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 43 && requestedTime.Minute <= 44)
+            {
+                var roundMark = 45 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 45 && requestedTime.Minute <= 47)
+            {
+                var roundMark = 45 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 47 && requestedTime.Minute <= 49)
+            {
+                var roundMark = 50 - minute;
+                newProposedTime = newProposedTime.AddMinutes(roundMark);
+            }
+            else if (requestedTime.Minute > 49 && requestedTime.Minute <= 59)
             {
                 var roundMark = 60 - minute;
                 newProposedTime = newProposedTime.AddMinutes(roundMark);
