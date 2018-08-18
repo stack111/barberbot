@@ -96,13 +96,19 @@
                         }
                         else
                         {
-                            // we will send the suggestion so if the user confirms we can use it.
-                            suggestedAppointmentRequest = response.SuggestedRequest;
-                            var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
-                               response.FormattedValidationMessage(),
-                               "Sorry I didn't understand you. Can you choose an option below?",
-                               2);
-                            context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                            if (response.SuggestedRequest == null)
+                            {
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, I couldn't give you a suggested appointment. {response.FormattedValidationMessage()} Can you suggest both date and time which would work for you?", context.Activity.AsMessageActivity().Locale);
+                            }
+                            else
+                            {
+                                suggestedAppointmentRequest = response.SuggestedRequest;
+                                var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
+                                   response.FormattedValidationMessage(),
+                                   "Sorry I didn't understand you. Can you choose an option below?",
+                                   2);
+                                context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                            }
                         }
                     }
                     else if (modelResult["type"] == "datetime")
@@ -139,12 +145,19 @@
                         }
                         else
                         {
-                            suggestedAppointmentRequest = response.SuggestedRequest;
-                            var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
-                               response.FormattedValidationMessage(),
-                               "Sorry I didn't understand you. Can you choose an option below?",
-                               2);
-                            context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                            if (response.SuggestedRequest == null)
+                            {
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, I couldn't give you a suggested appointment. {response.FormattedValidationMessage()} Can you suggest both date and time which would work for you?", context.Activity.AsMessageActivity().Locale);
+                            }
+                            else
+                            {
+                                suggestedAppointmentRequest = response.SuggestedRequest;
+                                var promptSuggestionConfirmation = new PromptDialog.PromptConfirm(
+                                   response.FormattedValidationMessage(),
+                                   "Sorry I didn't understand you. Can you choose an option below?",
+                                   2);
+                                context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
+                            }                           
                         }
                     }
                     else if (modelResult["type"] == "date")
@@ -176,7 +189,7 @@
                         {
                             if(response.SuggestedRequest == null)
                             {
-                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, but I couldn't give you a suggested appointment. Can you suggest both date and time which would work for you?", context.Activity.AsMessageActivity().Locale);
+                                await context.PostAsync($"I looked at {request.ToSuggestionString()}, I couldn't give you a suggested appointment. Can you suggest both date and time which would work for you?", context.Activity.AsMessageActivity().Locale);
                             }
                             else
                             {
@@ -188,7 +201,6 @@
                                2);
                                 context.Call(promptSuggestionConfirmation, this.AfterSuggestionConfirmation);
                             }
-                            
                         }
                     }
                     else

@@ -8,39 +8,37 @@ namespace BarberBot
     [Serializable]
     public class MemoryAppointmentRepository : IRepository<Appointment>
     {
-        private static Dictionary<DateTime, List<Appointment>> BookedAppointments = new Dictionary<DateTime, List<Appointment>>();
-
-        public Task<bool> ExistsAsync(string id, DateTime appointmentTime)
-        {
-            // look for appointments between the range of the appointmentTime - half appointment length to appointmentTime + length for the id
-            // this works because we base on rounding rules of 1-15 => 0 - 16-29 => 30 etc..
-            var existingKeyValuePairs = BookedAppointments.Where(appt => appt.Key >= appointmentTime.Add(BarberHours.AppointmentMiddleLength.Negate()) && appt.Key < appointmentTime.Add(BarberHours.AppointmentLength) && appt.Value != null && appt.Value.Any(b => string.Equals(b.Barber.DisplayName, id, StringComparison.OrdinalIgnoreCase)));
-            return Task.FromResult(existingKeyValuePairs != null && existingKeyValuePairs.Any());
-        }
+        private static Dictionary<string, List<Appointment>> BookedAppointments = new Dictionary<string, List<Appointment>>();
 
         public Task<bool> ExistsAsync(Appointment instance)
         {
-            var existingKeyValuePairs = BookedAppointments.Where(appt => appt.Key >= instance.StartDateTime && appt.Key < instance.EndDateTime && appt.Value != null && appt.Value.Any(b => string.Equals(b.Barber.DisplayName, instance.Barber.DisplayName, StringComparison.OrdinalIgnoreCase)));
+            var existingKeyValuePairs = BookedAppointments.Where(appt => 
+            appt.Key == instance.Barber.DisplayName && 
+            appt.Value != null && 
+            appt.Value.Any(a => a.IsConflicting(instance)));
 
             return Task.FromResult(existingKeyValuePairs != null && existingKeyValuePairs.Any());
         }
 
         public Task SaveAsync(Appointment instance)
         {
-            if (BookedAppointments.ContainsKey(instance.StartDateTime))
+            if (BookedAppointments.ContainsKey(instance.Barber.DisplayName))
             {
-                List<Appointment> appointments = BookedAppointments[instance.StartDateTime];
+                List<Appointment> appointments = BookedAppointments[instance.Barber.DisplayName];
                 appointments = appointments ?? new List<Appointment>();
                 List<Appointment> updatedAppointments = new List<Appointment>(appointments.Capacity);
-                foreach(var existingAppointment in appointments)
+                var existingAppointment = appointments.FirstOrDefault(a => a.Equals(instance));
+                if(existingAppointment != null)
                 {
-                    if(!string.Equals(existingAppointment.Barber.DisplayName, instance.Barber.DisplayName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        updatedAppointments.Add(existingAppointment);
-                    }
+                    var i = appointments.IndexOf(existingAppointment);
+                    appointments[i] = instance;
                 }
-                updatedAppointments.Add(instance);
-                BookedAppointments[instance.StartDateTime] = updatedAppointments;
+                else
+                {
+                    updatedAppointments.Add(instance);
+                }
+               
+                BookedAppointments[instance.Barber.DisplayName] = updatedAppointments;
             }
             else
             {
@@ -48,7 +46,7 @@ namespace BarberBot
                 {
                     instance
                 };
-                BookedAppointments.Add(instance.StartDateTime, updatedAppointments);
+                BookedAppointments.Add(instance.Barber.DisplayName, updatedAppointments);
             }
             return Task.CompletedTask;
         }

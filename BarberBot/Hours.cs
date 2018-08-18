@@ -12,6 +12,8 @@ namespace BarberBot
         protected DateTime Requested { get; set; }
         protected readonly IHoursRepository Repository;
         public T Instance { get; private set; }
+        public static TimeSpan SuggestionAttemptIncrement = TimeSpan.FromMinutes(10);
+        public static int SuggestionAttempts = 10;
 
         public Hours(Hours<T> hours) : this(hours.Repository)
         {

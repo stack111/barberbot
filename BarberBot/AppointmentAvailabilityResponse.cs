@@ -14,7 +14,6 @@ namespace BarberBot
         }
 
         public bool IsAvailable { get; set; }
-        public bool RoundedRequestedTime { get; set; }
         public AppointmentRequest SuggestedRequest { get; set; }
 
         public List<ValidationResult> ValidationResults { get; set; }

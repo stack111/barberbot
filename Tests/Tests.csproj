@@ -94,7 +94,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppointmentTests.cs" />
     <Compile Include="AppointmentRequestTests.cs" />
+    <Compile Include="AppointmentRequestDateTimeRulesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HoursTests.cs" />
   </ItemGroup>

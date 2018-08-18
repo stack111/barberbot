@@ -6,7 +6,7 @@ namespace BarberBot
     public interface IBarber : ISchedulable
     {
         string DisplayName { get; set; }
-        BarberHours Hours { get; }
+        Hours<IBarber> Hours { get; }
 
         bool Equals(object obj);
         int GetHashCode();

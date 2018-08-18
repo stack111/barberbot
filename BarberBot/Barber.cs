@@ -9,10 +9,10 @@ namespace BarberBot
     [JsonObject]
     public class Barber : IBarber
     {
-        private readonly Shop shop;
+        private readonly IShop shop;
         private readonly IRepository<Appointment> appointmentRepository;
 
-        public Barber(Shop shop, IRepository<Appointment> appointmentRepository, BarberHours hours)
+        public Barber(IShop shop, IRepository<Appointment> appointmentRepository, Hours<IBarber> hours)
         {
             this.shop = shop;
             this.appointmentRepository = appointmentRepository;
@@ -22,7 +22,7 @@ namespace BarberBot
         [JsonProperty(PropertyName = "displayName")]
         public string DisplayName { get; set; }
 
-        public BarberHours Hours { get; private set; }
+        public Hours<IBarber> Hours { get; private set; }
 
         public HoursType Type => HoursType.Barber;
 
@@ -68,12 +68,10 @@ namespace BarberBot
             appointment.CopyFrom(appointmentRequest);
             bool conflictingAppointment = await appointment.ExistsAsync();
             bool barberAvailability = Hours.Exists && startTimeAvailable && !conflictingAppointment;
-            bool withinHours = Hours.IsWithinHours(appointmentRequest.StartDateTime);
             // if not available get next available barber
             BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse()
             {
                 IsAvailable = barberAvailability,
-                IsWithinHours = withinHours,
                 IsConflictingAppointment = conflictingAppointment,
                 Barber = this
             };
@@ -107,9 +105,9 @@ namespace BarberBot
             {
                 int attempts = 0;
                 DateTime nextDateTimeCheck = suggestedAppointment.StartDateTime;
-                while (!availableResponse.IsAvailable && attempts < 5)
+                while (!availableResponse.IsAvailable && attempts < BarberHours.SuggestionAttempts)
                 {
-                    nextDateTimeCheck = suggestedAppointment.StartDateTime.Add(BarberHours.AppointmentMiddleLength);
+                    nextDateTimeCheck = suggestedAppointment.StartDateTime.Add(BarberHours.SuggestionAttemptIncrement);
                     if (!await shop.IsOpenAsync(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);
@@ -121,7 +119,7 @@ namespace BarberBot
                     attempts++;
                 }
 
-                if(attempts < 5 && availableResponse.IsAvailable)
+                if(attempts < BarberHours.SuggestionAttempts && availableResponse.IsAvailable)
                 {
                     suggestedAppointment.StartDateTime = nextDateTimeCheck;
                 }

@@ -144,7 +144,7 @@ namespace BarberBot
             nextRequest.CopyFrom(appointmentRequest);
             
             int attempts = 0;
-            while (nextAvailable == null && attempts < 5)
+            while (nextAvailable == null && attempts < ShopHours.SuggestionAttempts)
             {
                 foreach (var barber in barbers)
                 {
@@ -158,7 +158,7 @@ namespace BarberBot
 
                 if (nextAvailable == null)
                 {
-                    DateTime nextDateTimeCheck = nextRequest.StartDateTime.Add(BarberHours.AppointmentMiddleLength);
+                    DateTime nextDateTimeCheck = nextRequest.StartDateTime.Add(ShopHours.SuggestionAttemptIncrement);
                     if (!await IsOpenAsync(nextDateTimeCheck))
                     {
                         nextDateTimeCheck = nextDateTimeCheck.AddDays(1);

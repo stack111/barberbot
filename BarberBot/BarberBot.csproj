@@ -388,6 +388,7 @@
     <Compile Include="Appointment.cs" />
     <Compile Include="AppointmentRequest.cs" />
     <Compile Include="AppointmentAvailabilityResponse.cs" />
+    <Compile Include="AppointmentRequestDateTimeRounding.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Barber.cs" />
     <Compile Include="BarberAvailabilityResponse.cs" />

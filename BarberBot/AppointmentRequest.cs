@@ -10,31 +10,42 @@ namespace BarberBot
     [Serializable]
     public class AppointmentRequest
     {
-        private bool roundedRequestedDateTime;
-
-        public AppointmentRequest(Shop shop)
+        private readonly AppointmentRequestDateTimeRounding roundingRules;
+        public AppointmentRequest(IShop shop)
         {
             Shop = shop;
+            roundingRules = new AppointmentRequestDateTimeRounding();
         }
 
         public DateTime StartDateTime { get; set; }
 
-        public Barber RequestedBarber { get; set; }
+        public IBarber RequestedBarber { get; set; }
 
-        public Shop Shop { get; private set; }
+        public IShop Shop { get; private set; }
 
         public BarberService Service { get; set; }
 
         public async Task<AppointmentAvailabilityResponse> IsAvailableAsync()
         {
             DateTime nowDateTime = DateTime.UtcNow.AddHours(ShopHours.UTC_to_PST_Hours);
-            StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime);
+
+            if (StartDateTime < nowDateTime)
+            {
+                var response = new AppointmentAvailabilityResponse()
+                {
+                    IsAvailable = false
+                };
+                response.ValidationResults.Add(new ValidationResult() { Message = "That date and time is in the past." });
+                return response;
+            }
+
+            StartDateTime = await roundingRules.RoundDateTimeAsync(StartDateTime);
             TimeSpan difference = nowDateTime - StartDateTime;
 
             // we need to adjust the rounding for any rounding to a few minutes in the past.
             while (StartDateTime < nowDateTime && difference < TimeSpan.FromMinutes(1))
             {
-                StartDateTime = await RoundAppointmentDateTimeAsync(StartDateTime.AddMinutes(5));
+                StartDateTime = await roundingRules.RoundDateTimeAsync(StartDateTime.AddMinutes(5));
             }
 
             var shopResponse = await Shop.IsAvailableAsync(this);
@@ -50,7 +61,6 @@ namespace BarberBot
                 return new AppointmentAvailabilityResponse()
                 {
                     IsAvailable = true,
-                    RoundedRequestedTime = roundedRequestedDateTime,
                     SuggestedRequest = this
                 };
             }
@@ -63,7 +73,6 @@ namespace BarberBot
                 var response = new AppointmentAvailabilityResponse()
                 {
                     IsAvailable = false,
-                    RoundedRequestedTime = roundedRequestedDateTime,
                     SuggestedRequest = suggestedRequest
                 };
                 response.ValidationResults.AddRange(barberResponse.ValidationResults);
@@ -77,8 +86,7 @@ namespace BarberBot
                 AppointmentRequest nextRequest = null;
                 AppointmentAvailabilityResponse response = new AppointmentAvailabilityResponse()
                 {
-                    IsAvailable = false,
-                    RoundedRequestedTime = roundedRequestedDateTime
+                    IsAvailable = false
                 };
                 if (!shopResponse.IsAvailable)
                 {
@@ -132,94 +140,6 @@ namespace BarberBot
             StringBuilder builder = new StringBuilder();
             builder.AppendFormat("{2} {0:m} at {0:t} with {1}", StartDateTime, RequestedBarber.DisplayName, StartDateTime.ToString("ddd"));
             return builder.ToString();
-        }
-
-        private async Task<DateTime> RoundAppointmentDateTimeAsync(DateTime requestedTime)
-        {
-            DateTime newProposedTime = new DateTime(requestedTime.Year, requestedTime.Month, requestedTime.Day, requestedTime.Hour, requestedTime.Minute, 0, requestedTime.Kind);
-            int hour = requestedTime.Hour;
-            int minute = requestedTime.Minute;
-            roundedRequestedDateTime = true;
-            if (requestedTime.Minute > 0 && requestedTime.Minute <= 5)
-            {
-                newProposedTime = newProposedTime.AddMinutes(-1 * minute);
-            }
-            else if (requestedTime.Minute > 5 && requestedTime.Minute <= 9)
-            {
-                var roundMark = 10 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 10 && requestedTime.Minute <= 13)
-            {
-                var roundMark = 10 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 13 && requestedTime.Minute <= 14)
-            {
-                var roundMark = 15 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 15 && requestedTime.Minute <= 17)
-            {
-                var roundMark = 15 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 17 && requestedTime.Minute < 20)
-            {
-                var roundMark = 20 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 20 && requestedTime.Minute <= 25)
-            {
-                var roundMark = 20 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 25 && requestedTime.Minute <= 29)
-            {
-                var roundMark = 30 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute >= 31 && requestedTime.Minute <= 35)
-            {
-                var roundMark = 30 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 35 && requestedTime.Minute <= 39)
-            {
-                var roundMark = 40 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute >= 41 && requestedTime.Minute <= 43)
-            {
-                var roundMark = 40 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 43 && requestedTime.Minute <= 44)
-            {
-                var roundMark = 45 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 45 && requestedTime.Minute <= 47)
-            {
-                var roundMark = 45 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 47 && requestedTime.Minute <= 49)
-            {
-                var roundMark = 50 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else if (requestedTime.Minute > 49 && requestedTime.Minute <= 59)
-            {
-                var roundMark = 60 - minute;
-                newProposedTime = newProposedTime.AddMinutes(roundMark);
-            }
-            else
-            {
-                roundedRequestedDateTime = false;
-            }
-
-            return newProposedTime;
         }
 
         public void CopyFrom(AppointmentRequest suggestedAppointmentRequest)
