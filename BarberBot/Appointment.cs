@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BarberBot
@@ -38,9 +39,10 @@ namespace BarberBot
             await repository.SaveAsync(this);
         }
 
-        public async Task<bool> ExistsAsync()
+        public async Task<bool> HasConflictingAppointmentsAsync()
         {
-            return await repository.ExistsAsync(this);
+            var appointments = await repository.LoadAllByDateTimeAsync(this);
+            return appointments.Any();
         }
 
         public bool IsConflicting(Appointment appointment)

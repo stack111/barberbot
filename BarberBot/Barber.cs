@@ -66,13 +66,13 @@ namespace BarberBot
             bool durationAvailable = await Hours.IsAvailableAsync(this, durationTime);
             Appointment appointment = new Appointment(appointmentRepository);
             appointment.CopyFrom(appointmentRequest);
-            bool conflictingAppointment = await appointment.ExistsAsync();
-            bool barberAvailability = Hours.Exists && startTimeAvailable && !conflictingAppointment;
+            bool conflictingAppointments = await appointment.HasConflictingAppointmentsAsync();
+            bool barberAvailability = Hours.Exists && startTimeAvailable && !conflictingAppointments;
             // if not available get next available barber
             BarberAvailabilityResponse availabilityResponse = new BarberAvailabilityResponse()
             {
                 IsAvailable = barberAvailability,
-                IsConflictingAppointment = conflictingAppointment,
+                IsConflictingAppointment = conflictingAppointments,
                 Barber = this
             };
 

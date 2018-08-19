@@ -10,14 +10,18 @@ namespace BarberBot
     {
         private static Dictionary<string, List<Appointment>> BookedAppointments = new Dictionary<string, List<Appointment>>();
 
-        public Task<bool> ExistsAsync(Appointment instance)
+        public Task<IEnumerable<Appointment>> LoadAllByDateTimeAsync(Appointment instance)
         {
-            var existingKeyValuePairs = BookedAppointments.Where(appt => 
-            appt.Key == instance.Barber.DisplayName && 
-            appt.Value != null && 
-            appt.Value.Any(a => a.IsConflicting(instance)));
-
-            return Task.FromResult(existingKeyValuePairs != null && existingKeyValuePairs.Any());
+            if (BookedAppointments.ContainsKey(instance.Barber.DisplayName))
+            {
+                var appointments = BookedAppointments[instance.Barber.DisplayName];
+                return Task.FromResult(appointments.Where(a => a.IsConflicting(instance)));
+            }
+            else
+            {
+                IEnumerable<Appointment> empty = new List<Appointment>();
+                return Task.FromResult(empty);
+            }
         }
 
         public Task SaveAsync(Appointment instance)
