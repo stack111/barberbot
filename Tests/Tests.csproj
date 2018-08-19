@@ -101,9 +101,13 @@
     <Compile Include="HoursTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BarberBot\BarberBot.csproj">
-      <Project>{9c7e3a46-b60f-4052-9a21-dc8d1a942216}</Project>
-      <Name>BarberBot</Name>
+    <ProjectReference Include="..\BarberBotHost\BarberBotHost.csproj">
+      <Project>{c29e0a04-f8f3-4127-b3ee-cbd6444b6155}</Project>
+      <Name>BarberBotHost</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BusinessLayer\BusinessLayer.csproj">
+      <Project>{1c5197be-3f60-4a35-a672-905ac2c7d943}</Project>
+      <Name>BusinessLayer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
