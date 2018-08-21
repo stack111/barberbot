@@ -78,10 +78,7 @@ namespace BarberBot
                 {
                     return false; // adjacent
                 }
-                else if (EndDateTime != appointment.EndDateTime)
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;

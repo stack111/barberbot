@@ -54,5 +54,44 @@ namespace BarberBot.Tests
             Assert.Equal(expectedConflict, result);
             barberMock.VerifyAll();
         }
+
+        [Fact]
+        public void Appointment_IsConflicting_730()
+        {
+            Mock<IRepository<Appointment>> appointmentRepoMock = new Mock<IRepository<Appointment>>();
+            Mock<IShop> shopMock = new Mock<IShop>();
+            Mock<IBarber> barberMock = new Mock<IBarber>();
+            barberMock.Setup(b => b.DisplayName)
+                .Returns("Barber")
+                .Verifiable();
+
+            barberMock.Setup(b => b.Equals(It.Is<IBarber>(o => o.DisplayName == "Barber")))
+                .Returns(true)
+                .Verifiable();
+
+            var now = new DateTime(2018, 1, 1, 7, 30, 0);
+            AppointmentRequest initialRequest = new AppointmentRequest(shopMock.Object)
+            {
+                StartDateTime = now,
+                RequestedBarber = barberMock.Object,
+                Service = new BarberService() { DisplayName = "Some Service", Duration = TimeSpan.FromMinutes(40) }
+            };
+            Appointment appointment = new Appointment(appointmentRepoMock.Object);
+            appointment.CopyFrom(initialRequest);
+
+            Appointment conflictingAppt = new Appointment(appointmentRepoMock.Object);
+            AppointmentRequest conflictingRequest = new AppointmentRequest(shopMock.Object)
+            {
+                StartDateTime = now.AddMinutes(-15),
+                RequestedBarber = barberMock.Object,
+                Service = new BarberService() { DisplayName = "Some Service", Duration = TimeSpan.FromMinutes(40) }
+            };
+            conflictingAppt.CopyFrom(conflictingRequest);
+
+            bool result = appointment.IsConflicting(conflictingAppt);
+
+            Assert.True(result);
+            barberMock.VerifyAll();
+        }
     }
 }
